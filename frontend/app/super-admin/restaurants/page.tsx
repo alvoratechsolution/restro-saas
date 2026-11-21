@@ -424,25 +424,35 @@ export default function RestaurantsPage() {
 
       {/* Add Restaurant Modal Overlay */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-            <div className="p-6 border-b border-slate-850 flex justify-between items-center bg-slate-950/20">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Store className="h-5 w-5 text-orange-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-[#0f1422] border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 shrink-0">
+              <h2 className="text-lg font-black text-white flex items-center gap-2.5">
+                <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-400">
+                  <Store className="h-5 w-5" />
+                </div>
                 Register Restaurant Tenant
               </h2>
-              <button onClick={resetAddForm} className="text-slate-400 hover:text-white">
-                <X className="h-6 w-6" />
+              <button
+                type="button"
+                onClick={resetAddForm}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddRestaurant} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            {/* Scrollable Form Body */}
+            <form id="addRestaurantForm" onSubmit={handleAddRestaurant} className="p-6 space-y-4 overflow-y-auto flex-1">
               <Input
                 label="Restaurant Name *"
                 type="text"
                 placeholder="The Italian Bistro"
                 value={newRestName}
                 onChange={(e) => setNewRestName(e.target.value)}
+                className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                labelClassName="text-slate-300 font-bold text-xs"
                 required
                 disabled={addingRestaurant}
               />
@@ -454,6 +464,8 @@ export default function RestaurantsPage() {
                   placeholder="admin@bistro.com"
                   value={newAdminEmail}
                   onChange={(e) => setNewAdminEmail(e.target.value)}
+                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   required
                   disabled={addingRestaurant}
                 />
@@ -463,6 +475,8 @@ export default function RestaurantsPage() {
                   placeholder="••••••••"
                   value={newAdminPassword}
                   onChange={(e) => setNewAdminPassword(e.target.value)}
+                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   required
                   disabled={addingRestaurant}
                 />
@@ -479,6 +493,8 @@ export default function RestaurantsPage() {
                     setNewPhone(val);
                   }
                 }}
+                className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                labelClassName="text-slate-300 font-bold text-xs"
                 disabled={addingRestaurant}
               />
 
@@ -487,6 +503,8 @@ export default function RestaurantsPage() {
                 placeholder="456 Main Street, Suite A"
                 value={newAddress}
                 onChange={(e) => setNewAddress(e.target.value)}
+                className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                labelClassName="text-slate-300 font-bold text-xs"
                 disabled={addingRestaurant}
                 rows={3}
               />
@@ -495,6 +513,8 @@ export default function RestaurantsPage() {
                 label="Initial Subscription Plan"
                 value={newSubscriptionPlanId}
                 onChange={(e) => setNewSubscriptionPlanId(e.target.value)}
+                className="bg-[#161c2d] border-slate-700/80 text-white rounded-xl"
+                labelClassName="text-slate-300 font-bold text-xs"
                 options={[
                   { value: "", label: "Trial Plan (Default)" },
                   ...plans.map((p) => ({ value: p._id, label: `${p.name} ($${p.price})` })),
@@ -502,29 +522,31 @@ export default function RestaurantsPage() {
                 disabled={addingRestaurant}
               />
 
-              <div className="text-[10px] text-slate-500 font-semibold">
+              <div className="text-[11px] text-slate-400 bg-slate-950/40 border border-slate-800/80 p-3 rounded-xl leading-relaxed">
                 * Fields are required. Creating a restaurant will automatically generate a default branch and setup an admin login credentials record.
               </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
-                <Button
-                  type="button"
-                  onClick={resetAddForm}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
-                  disabled={addingRestaurant}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addingRestaurant}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2"
-                >
-                  {addingRestaurant && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Create Restaurant
-                </Button>
-              </div>
             </form>
+
+            {/* Fixed Modal Footer with Action Buttons */}
+            <div className="p-4 border-t border-slate-800 bg-slate-900/60 flex justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={resetAddForm}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-colors"
+                disabled={addingRestaurant}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="addRestaurantForm"
+                disabled={addingRestaurant}
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-orange-500/20 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {addingRestaurant && <Loader2 className="h-4 w-4 animate-spin" />}
+                Create Restaurant
+              </button>
+            </div>
           </div>
         </div>
       )}

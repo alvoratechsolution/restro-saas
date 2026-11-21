@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
-import { CreditCard, Plus, Loader2, Edit2, CheckCircle2, XCircle } from "lucide-react";
+import { CreditCard, Plus, Loader2, Edit2, CheckCircle2, XCircle, X } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -218,21 +218,33 @@ export default function PlansPage() {
 
       {/* Plan Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-            <div className="p-6 border-b border-slate-850">
-              <h2 className="text-xl font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-[#0f1422] border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 shrink-0">
+              <h2 className="text-lg font-black text-white flex items-center gap-2.5">
+                <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-400">
+                  <CreditCard className="h-5 w-5" />
+                </div>
                 {editingPlan ? "Edit Subscription Plan" : "Create New Subscription Plan"}
               </h2>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form id="planForm" onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
               <Input
                 label="Plan Name *"
                 type="text"
                 placeholder="Basic Plan"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                labelClassName="text-slate-300 font-bold text-xs"
                 required
               />
 
@@ -243,12 +255,16 @@ export default function PlansPage() {
                   placeholder="29"
                   value={price}
                   onChange={(e) => setPrice(Number(e.target.value))}
+                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   required
                 />
                 <Select
                   label="Billing Cycle *"
                   value={billingCycle}
                   onChange={(e) => setBillingCycle(e.target.value)}
+                  className="bg-[#161c2d] border-slate-700/80 text-white rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   options={[
                     { value: "monthly", label: "Monthly" },
                     { value: "yearly", label: "Yearly" },
@@ -263,6 +279,8 @@ export default function PlansPage() {
                   type="number"
                   value={maxBranches}
                   onChange={(e) => setMaxBranches(Number(e.target.value))}
+                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   required
                 />
                 <Input
@@ -270,6 +288,8 @@ export default function PlansPage() {
                   type="number"
                   value={maxTablesPerBranch}
                   onChange={(e) => setMaxTablesPerBranch(Number(e.target.value))}
+                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   required
                 />
                 <Input
@@ -277,12 +297,14 @@ export default function PlansPage() {
                   type="number"
                   value={maxMenuItems}
                   onChange={(e) => setMaxMenuItems(Number(e.target.value))}
+                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
+                  labelClassName="text-slate-300 font-bold text-xs"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                   Select Plan Features *
                 </label>
                 <div className="grid grid-cols-1 gap-2.5 max-h-48 overflow-y-auto p-1">
@@ -332,27 +354,29 @@ export default function PlansPage() {
                   Plan is active and available for subscribe
                 </label>
               </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
-                <Button
-                  type="button"
-                  onClick={resetForm}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createPlanMutation.isPending || updatePlanMutation.isPending}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2"
-                >
-                  {(createPlanMutation.isPending || updatePlanMutation.isPending) && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  )}
-                  Save Plan
-                </Button>
-              </div>
             </form>
+
+            {/* Fixed Modal Footer with Action Buttons */}
+            <div className="p-4 border-t border-slate-800 bg-slate-900/60 flex justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="planForm"
+                disabled={createPlanMutation.isPending || updatePlanMutation.isPending}
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-orange-500/20 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {(createPlanMutation.isPending || updatePlanMutation.isPending) && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {editingPlan ? "Update Plan" : "Create Plan"}
+              </button>
+            </div>
           </div>
         </div>
       )}
