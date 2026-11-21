@@ -55,6 +55,14 @@ export default function KitchenPage() {
 
   const orders = response?.data || [];
 
+  const { data: restInfo } = useQuery<{
+    success: boolean;
+    data: { hasKitchen?: boolean; name?: string };
+  }>({
+    queryKey: ["kitchen", "restaurant-info"],
+    queryFn: () => apiFetch("/api/admin/restaurant-info"),
+  });
+
   // Socket integration
   const socket = useSocket(branchId);
 
@@ -120,6 +128,23 @@ export default function KitchenPage() {
   const handleUpdate = (id: string, status: Order["status"]) => {
     updateStatusMutation.mutate({ id, status });
   };
+
+  if (restInfo?.data && restInfo.data.hasKitchen === false) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="h-16 w-16 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center mb-4">
+          <Flame className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-black text-white mb-2">Kitchen (KDS) Portal Disabled</h1>
+        <p className="text-slate-400 max-w-md text-sm mb-6">
+          The Kitchen Display System has been disabled for {restInfo.data.name || "this restaurant"} by the Super Administrator.
+        </p>
+        <Button onClick={() => signOut({ callbackUrl: "/login" })} className="bg-orange-500 hover:bg-orange-600 text-white font-bold">
+          Sign Out & Return
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">

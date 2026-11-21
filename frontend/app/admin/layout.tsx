@@ -44,6 +44,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       name: string;
       slug?: string;
       logo?: string;
+      hasKitchen?: boolean;
+      hasStaff?: boolean;
+      enabledModules?: string[];
       subscriptionPlan?: {
         name: string;
         features: string[];
@@ -158,7 +161,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Settings", href: "/admin/settings", icon: SettingsIcon, feature: "settings" },
   ];
 
+  const hasStaff = restaurantResponse?.data?.hasStaff !== false;
+
   const filteredNavItems = navItems.filter((item) => {
+    if (item.feature === "staff" && !hasStaff && role !== "SUPER_ADMIN") return false;
     if (role === "SUPER_ADMIN") return true;
     return !item.feature || activeFeatures.includes(item.feature);
   });

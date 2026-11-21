@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
 import { BACKEND_URL } from "@/lib/config";
-import { Store, Globe, Calendar, CheckCircle, AlertTriangle, Loader2, Plus, X } from "lucide-react";
+import { Store, Globe, Calendar, CheckCircle, AlertTriangle, Loader2, Plus, X, ShieldCheck, ChefHat, Users, Mail } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -31,6 +31,9 @@ interface Restaurant {
   isActive: boolean;
   isSuspended: boolean;
   customDomain?: string;
+  hasKitchen?: boolean;
+  hasStaff?: boolean;
+  enabledModules?: string[];
   createdAt: string;
 }
 
@@ -48,7 +51,10 @@ export default function RestaurantsPage() {
   const [newPhone, setNewPhone] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [newSubscriptionPlanId, setNewSubscriptionPlanId] = useState("");
+  const [enableKitchen, setEnableKitchen] = useState(true);
+  const [enableStaff, setEnableStaff] = useState(true);
   const [addingRestaurant, setAddingRestaurant] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   // Edit subscription states
   const [editingPlanRestId, setEditingPlanRestId] = useState<string | null>(null);
@@ -94,6 +100,9 @@ export default function RestaurantsPage() {
       subscriptionPlan?: string;
       subscriptionStatus?: string;
       subscriptionEndsAt?: string | null;
+      hasKitchen?: boolean;
+      hasStaff?: boolean;
+      enabledModules?: string[];
     }) =>
       apiFetch("/api/super-admin/restaurants", {
         method: "PATCH",
@@ -101,7 +110,7 @@ export default function RestaurantsPage() {
       }),
     onSuccess: (res) => {
       if (res.success) {
-        toast.success("Tenant status updated");
+        toast.success("Tenant configuration updated");
         queryClient.invalidateQueries({ queryKey: ["super-admin", "restaurants"] });
         setEditingDomainRestId(null);
         setEditingPlanRestId(null);
@@ -135,6 +144,24 @@ export default function RestaurantsPage() {
     });
   };
 
+  const handleResendCredentials = async (restId: string, email: string) => {
+    setResendingId(restId);
+    try {
+      const res = await apiFetch(`/api/super-admin/restaurants/${restId}/resend-credentials`, {
+        method: "POST",
+      });
+      if (res?.success) {
+        toast.success(res.message || `Credentials sent to ${email}`);
+      } else {
+        toast.error(res?.error || "Failed to send credentials");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to dispatch email");
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   // Add Restaurant Handler
   const handleAddRestaurant = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,6 +189,13 @@ export default function RestaurantsPage() {
           phone: newPhone,
           address: newAddress,
           subscriptionPlanId: newSubscriptionPlanId || undefined,
+          hasKitchen: enableKitchen,
+          hasStaff: enableStaff,
+          enabledModules: [
+            "admin",
+            ...(enableKitchen ? ["kitchen"] : []),
+            ...(enableStaff ? ["staff"] : []),
+          ],
         }),
       });
 
@@ -170,7 +204,7 @@ export default function RestaurantsPage() {
         throw new Error(data.error || "Failed to add restaurant");
       }
 
-      toast.success("New Restaurant registered successfully!");
+      toast.success("New Restaurant registered! Credentials email dispatched.");
       queryClient.invalidateQueries({ queryKey: ["super-admin", "restaurants"] });
       resetAddForm();
     } catch (err: any) {
@@ -187,6 +221,8 @@ export default function RestaurantsPage() {
     setNewPhone("");
     setNewAddress("");
     setNewSubscriptionPlanId("");
+    setEnableKitchen(true);
+    setEnableStaff(true);
     setShowAddModal(false);
   };
 
@@ -220,6 +256,7 @@ export default function RestaurantsPage() {
                   <th className="py-4 px-6">Restaurant Name</th>
                   <th className="py-4 px-6">Contact / Email</th>
                   <th className="py-4 px-6">Subscription Plan</th>
+                  <th className="py-4 px-6">Modules & Roles</th>
                   <th className="py-4 px-6">Custom Domain</th>
                   <th className="py-4 px-6">Access State</th>
                   <th className="py-4 px-6 text-right">Actions</th>
@@ -228,7 +265,7 @@ export default function RestaurantsPage() {
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
                 {restaurants.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-500">
+                    <td colSpan={7} className="py-8 text-center text-slate-500">
                       No tenants registered. Click &quot;Add Restaurant&quot; to onboard.
                     </td>
                   </tr>
@@ -346,6 +383,48 @@ export default function RestaurantsPage() {
                           </div>
                         )}
                       </td>
+                      {/* Operational Modules & Roles Column */}
+                      <td className="py-4 px-6">
+                        <div className="flex flex-wrap gap-1.5 max-w-[210px]">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-300 border border-orange-500/30">
+                            <ShieldCheck className="h-3 w-3" /> Admin
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateRestaurantMutation.mutate({
+                                id: rest._id,
+                                hasKitchen: rest.hasKitchen === false ? true : false,
+                              })
+                            }
+                            title="Click to toggle Kitchen KDS access"
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border cursor-pointer transition-all ${
+                              rest.hasKitchen !== false
+                                ? "bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25"
+                                : "bg-slate-900 text-slate-500 border-slate-800 line-through opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <ChefHat className="h-3 w-3" /> Kitchen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateRestaurantMutation.mutate({
+                                id: rest._id,
+                                hasStaff: rest.hasStaff === false ? true : false,
+                              })
+                            }
+                            title="Click to toggle Staff & Waiter portal access"
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border cursor-pointer transition-all ${
+                              rest.hasStaff !== false
+                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
+                                : "bg-slate-900 text-slate-500 border-slate-800 line-through opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <Users className="h-3 w-3" /> Staff
+                          </button>
+                        </div>
+                      </td>
                       <td className="py-4 px-6">
                         {editingDomainRestId === rest._id ? (
                           <div className="flex items-center gap-2">
@@ -401,6 +480,20 @@ export default function RestaurantsPage() {
                         </button>
                       </td>
                       <td className="py-4 px-6 text-right space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => handleResendCredentials(rest._id, rest.billingEmail)}
+                          disabled={resendingId === rest._id}
+                          title="Send login credentials & plan details email to admin"
+                          className="px-2 py-1 text-slate-400 hover:text-orange-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 text-xs"
+                        >
+                          {resendingId === rest._id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-400" />
+                          ) : (
+                            <Mail className="h-3.5 w-3.5 text-orange-400" />
+                          )}
+                          <span className="hidden xl:inline text-[11px] font-semibold">Email</span>
+                        </button>
                         <Button
                           size="sm"
                           className={`${
@@ -522,8 +615,87 @@ export default function RestaurantsPage() {
                 disabled={addingRestaurant}
               />
 
+              {/* Module & Role Permissions Selection */}
+              <div className="space-y-2 pt-1">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                  Select Portals & Role Modules *
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Configure which portals this tenant can access (Admin only, or with Kitchen & Staff):
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Admin Portal (Always Active / Default) */}
+                  <div className="p-3 rounded-xl border border-orange-500/40 bg-orange-500/10 flex flex-col justify-between cursor-not-allowed select-none">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <ShieldCheck className="h-4 w-4 text-orange-400 shrink-0" />
+                        Admin
+                      </span>
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300">
+                        Default
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Master control, menus, tables & analytics.
+                    </p>
+                  </div>
+
+                  {/* Kitchen KDS Portal */}
+                  <div
+                    onClick={() => !addingRestaurant && setEnableKitchen(!enableKitchen)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer select-none flex flex-col justify-between ${
+                      enableKitchen
+                        ? "bg-amber-500/10 border-amber-500/40 text-white shadow-sm shadow-amber-500/10"
+                        : "bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-500"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-bold flex items-center gap-1.5 ${enableKitchen ? "text-white" : "text-slate-400"}`}>
+                        <ChefHat className={`h-4 w-4 shrink-0 ${enableKitchen ? "text-amber-400" : "text-slate-500"}`} />
+                        Kitchen (KDS)
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={enableKitchen}
+                        readOnly
+                        className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 pointer-events-none"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Chef line screen for preparing orders.
+                    </p>
+                  </div>
+
+                  {/* Staff & Waiter Portal */}
+                  <div
+                    onClick={() => !addingRestaurant && setEnableStaff(!enableStaff)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer select-none flex flex-col justify-between ${
+                      enableStaff
+                        ? "bg-emerald-500/10 border-emerald-500/40 text-white shadow-sm shadow-emerald-500/10"
+                        : "bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-500"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-bold flex items-center gap-1.5 ${enableStaff ? "text-white" : "text-slate-400"}`}>
+                        <Users className={`h-4 w-4 shrink-0 ${enableStaff ? "text-emerald-400" : "text-slate-500"}`} />
+                        Staff / Waiter
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={enableStaff}
+                        readOnly
+                        className="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0 pointer-events-none"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">
+                      Waiter bell alerts & staff credentials.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="text-[11px] text-slate-400 bg-slate-950/40 border border-slate-800/80 p-3 rounded-xl leading-relaxed">
-                * Fields are required. Creating a restaurant will automatically generate a default branch and setup an admin login credentials record.
+                * An onboarding email with login ID, temporary password, active plan details, and portal links will be automatically sent to the Admin email address via Nodemailer.
               </div>
             </form>
 

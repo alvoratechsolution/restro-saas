@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 const checkAuth = require("../middleware/auth");
 const Restaurant = require("../models/Restaurant");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Lead = require("../models/Lead");
+const User = require("../models/User");
+const { sendWelcomeRegistrationEmail } = require("../services/email");
 
 
 router.use(checkAuth(["SUPER_ADMIN"]));
@@ -20,7 +23,19 @@ router.get("/restaurants", async (req, res) => {
 
 router.patch("/restaurants", async (req, res) => {
   try {
-    const { id, status, isActive, isSuspended, customDomain, subscriptionEndsAt, subscriptionPlan, subscriptionStatus } = req.body;
+    const {
+      id,
+      status,
+      isActive,
+      isSuspended,
+      customDomain,
+      subscriptionEndsAt,
+      subscriptionPlan,
+      subscriptionStatus,
+      hasKitchen,
+      hasStaff,
+      enabledModules,
+    } = req.body;
     const updateFields = {};
     if (status !== undefined) updateFields.status = status;
     if (isActive !== undefined) updateFields.isActive = isActive;
@@ -31,11 +46,56 @@ router.patch("/restaurants", async (req, res) => {
     }
     if (subscriptionPlan !== undefined) updateFields.subscriptionPlan = subscriptionPlan || null;
     if (subscriptionStatus !== undefined) updateFields.subscriptionStatus = subscriptionStatus;
+    if (hasKitchen !== undefined) updateFields.hasKitchen = Boolean(hasKitchen);
+    if (hasStaff !== undefined) updateFields.hasStaff = Boolean(hasStaff);
+    if (enabledModules !== undefined) updateFields.enabledModules = enabledModules;
 
     const updated = await Restaurant.findByIdAndUpdate(id, updateFields, { new: true }).populate("subscriptionPlan");
     return res.json({ success: true, data: updated });
   } catch (error) {
     return res.status(500).json({ error: "Failed to update restaurant" });
+  }
+});
+
+router.post("/restaurants/:id/resend-credentials", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tempPassword } = req.body || {};
+    const restaurant = await Restaurant.findById(id).populate("subscriptionPlan");
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant tenant not found" });
+    }
+
+    const adminUser = await User.findOne({ restaurantId: id, role: "RESTAURANT_ADMIN" });
+    if (!adminUser) {
+      return res.status(404).json({ error: "No administrator account found for this restaurant" });
+    }
+
+    let passwordToSend = tempPassword;
+    if (!passwordToSend) {
+      passwordToSend = "Sd@" + Math.random().toString(36).substring(2, 8) + "!";
+      adminUser.password = await bcrypt.hash(passwordToSend, 10);
+      await adminUser.save();
+    }
+
+    await sendWelcomeRegistrationEmail({
+      email: adminUser.email,
+      name: adminUser.name,
+      restaurantName: restaurant.name,
+      password: passwordToSend,
+      plan: restaurant.subscriptionPlan,
+      hasKitchen: restaurant.hasKitchen,
+      hasStaff: restaurant.hasStaff,
+    });
+
+    return res.json({
+      success: true,
+      message: `Credentials email dispatched to ${adminUser.email}`,
+      generatedPassword: passwordToSend,
+    });
+  } catch (error) {
+    console.error("Resend credentials error:", error);
+    return res.status(500).json({ error: error.message || "Failed to resend credentials" });
   }
 });
 

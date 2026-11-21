@@ -28,6 +28,18 @@ const checkFeature = (featureName) => {
         return res.status(403).json({ error: "No active subscription plan found." });
       }
 
+      // Verify operational module enablement
+      if (featureName === "staff" && restaurant.hasStaff === false) {
+        return res.status(403).json({
+          error: "Staff & Waiter portal module is disabled for this restaurant tenant.",
+        });
+      }
+      if (featureName === "kitchen" && restaurant.hasKitchen === false) {
+        return res.status(403).json({
+          error: "Kitchen (KDS) portal module is disabled for this restaurant tenant.",
+        });
+      }
+
       // Verify feature exists in subscription plan
       const hasFeature = plan.features && plan.features.includes(featureName);
       if (!hasFeature) {

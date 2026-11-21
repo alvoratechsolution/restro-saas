@@ -25,7 +25,17 @@ function generateSlug(text) {
 // 1. REGISTRATION
 router.post("/register", async (req, res) => {
   try {
-    const { restaurantName, email, password, phone, address, subscriptionPlanId } = req.body;
+    const {
+      restaurantName,
+      email,
+      password,
+      phone,
+      address,
+      subscriptionPlanId,
+      hasKitchen,
+      hasStaff,
+      enabledModules,
+    } = req.body;
 
     if (!restaurantName || !email || !password) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -72,6 +82,16 @@ router.post("/register", async (req, res) => {
       counter++;
     }
 
+    const isKitchenEnabled = hasKitchen !== undefined ? Boolean(hasKitchen) : true;
+    const isStaffEnabled = hasStaff !== undefined ? Boolean(hasStaff) : true;
+    const assignedModules = Array.isArray(enabledModules) && enabledModules.length > 0
+      ? enabledModules
+      : [
+          "admin",
+          ...(isKitchenEnabled ? ["kitchen"] : []),
+          ...(isStaffEnabled ? ["staff"] : []),
+        ];
+
     const restaurant = await Restaurant.create({
       name: restaurantName,
       slug,
@@ -81,6 +101,9 @@ router.post("/register", async (req, res) => {
       subscriptionPlan: selectedPlan._id,
       subscriptionStatus: selectedStatus,
       subscriptionEndsAt: selectedEndsAt,
+      hasKitchen: isKitchenEnabled,
+      hasStaff: isStaffEnabled,
+      enabledModules: assignedModules,
     });
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -126,9 +149,17 @@ router.post("/register", async (req, res) => {
       fontFamily: "Plus Jakarta Sans",
     });
 
-    // Send Welcome Email
+    // Send Welcome Email with credentials and plan details via Nodemailer
     try {
-      await sendWelcomeRegistrationEmail(user.email, restaurantName + " Admin", restaurantName);
+      await sendWelcomeRegistrationEmail({
+        email: user.email,
+        name: restaurantName + " Admin",
+        restaurantName,
+        password, // Raw password delivered in email
+        plan: selectedPlan,
+        hasKitchen: isKitchenEnabled,
+        hasStaff: isStaffEnabled,
+      });
     } catch (mailErr) {
       console.warn("Welcome email dispatch notice:", mailErr.message);
     }
@@ -171,6 +202,19 @@ router.post("/login", async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    // Check if kitchen or staff module is disabled for this restaurant
+    if (user.restaurantId && (user.role === "KITCHEN" || user.role === "STAFF" || user.role === "WAITER")) {
+      const rest = await Restaurant.findById(user.restaurantId);
+      if (rest) {
+        if (user.role === "KITCHEN" && rest.hasKitchen === false) {
+          return res.status(403).json({ error: "Kitchen (KDS) portal is not enabled for this restaurant." });
+        }
+        if ((user.role === "STAFF" || user.role === "WAITER") && rest.hasStaff === false) {
+          return res.status(403).json({ error: "Staff & Waiter portal is not enabled for this restaurant." });
+        }
+      }
     }
 
     // Sign JWT Token

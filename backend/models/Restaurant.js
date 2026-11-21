@@ -17,6 +17,12 @@ const RestaurantSchema = new Schema(
     billingEmail: { type: String, required: true, trim: true },
     phone: { type: String },
     address: { type: String },
+    hasKitchen: { type: Boolean, default: true },
+    hasStaff: { type: Boolean, default: true },
+    enabledModules: {
+      type: [String],
+      default: ["admin", "kitchen", "staff"],
+    },
   },
   { timestamps: true }
 );
