@@ -30,6 +30,7 @@ interface OrderItem {
   price: number;
   selectedVariant?: string;
   selectedAddons: Array<{ name: string; price: number }>;
+  specialInstructions?: string;
 }
 
 interface Table {
@@ -51,6 +52,7 @@ interface Order {
   status: "Pending" | "Preparing" | "Ready" | "Completed" | "Cancelled";
   paymentStatus: "Pending" | "Paid" | "Failed";
   paymentMethod: string;
+  specialInstructions?: string;
   createdAt: string;
 }
 
@@ -167,6 +169,7 @@ export default function OrdersPage() {
         ? `<div class="item-addons">+ ${item.selectedAddons.map(a => a.name).join(", ")}</div>` 
         : "";
       const variantText = item.selectedVariant ? `<div class="item-variant">Portion: ${item.selectedVariant}</div>` : "";
+      const noteText = item.specialInstructions ? `<div class="item-variant" style="color: #b45309; font-weight: bold;">Note: ${item.specialInstructions}</div>` : "";
       
       itemsHtml += `
         <tr class="item-row">
@@ -174,6 +177,7 @@ export default function OrdersPage() {
             <span class="item-qty">${item.quantity}x</span> ${item.name}
             ${variantText}
             ${addonsText}
+            ${noteText}
           </td>
           <td class="item-price-cell">₹${Math.round(item.price)}</td>
           <td class="item-total-cell">₹${Math.round(item.price * item.quantity)}</td>
@@ -306,6 +310,7 @@ export default function OrdersPage() {
             <div><strong>GUEST:</strong> ${order.customerName || "Walk-in Guest"} ${order.customerPhone ? "(" + order.customerPhone + ")" : ""}</div>
             <div><strong>DATE:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div>
             <div><strong>TIME:</strong> ${new Date(order.createdAt).toLocaleTimeString()}</div>
+            ${order.specialInstructions ? `<div style="margin-top: 4px; font-weight: bold; color: #b45309; font-size: 11px;">NOTE: ${order.specialInstructions}</div>` : ""}
           </div>
           <div class="divider"></div>
           <table class="items-table">
@@ -458,6 +463,14 @@ export default function OrdersPage() {
                   </span>
                 </div>
 
+                {/* Kitchen / Cooking Note */}
+                {order.specialInstructions && (
+                  <div className="mx-4 mt-3 bg-amber-50/90 border border-amber-200/90 rounded-xl px-3 py-1.5 flex items-start gap-1.5 text-xs text-amber-900">
+                    <span className="font-extrabold text-amber-700 shrink-0">👨‍🍳 Note:</span>
+                    <span className="font-semibold text-amber-950">{order.specialInstructions}</span>
+                  </div>
+                )}
+
                 {/* Items */}
                 <div className="p-4 flex-1 space-y-2.5 max-h-60 overflow-y-auto">
                   {order.items.map((item, idx) => (
@@ -474,6 +487,11 @@ export default function OrdersPage() {
                         {item.selectedAddons?.length > 0 && (
                           <p className="text-[10px] text-orange-600 font-semibold mt-0.5">
                             + {item.selectedAddons.map((a) => a.name).join(", ")}
+                          </p>
+                        )}
+                        {item.specialInstructions && (
+                          <p className="text-[10px] text-amber-700 font-bold mt-0.5">
+                            Note: {item.specialInstructions}
                           </p>
                         )}
                       </div>

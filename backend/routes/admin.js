@@ -662,6 +662,11 @@ router.get("/orders", checkFeature("orders"), async (req, res) => {
             primary.cgst = Math.round((primary.cgst || 0) + (secondary.cgst || 0));
             primary.sgst = Math.round((primary.sgst || 0) + (secondary.sgst || 0));
             primary.total = Math.round((primary.total || 0) + (secondary.total || 0));
+            if (secondary.specialInstructions) {
+              primary.specialInstructions = primary.specialInstructions
+                ? `${primary.specialInstructions}; ${secondary.specialInstructions}`
+                : secondary.specialInstructions;
+            }
             await primary.save();
           }
           await Order.findByIdAndDelete(secondary._id);

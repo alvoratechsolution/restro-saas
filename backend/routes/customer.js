@@ -173,6 +173,7 @@ router.post("/orders", async (req, res) => {
       couponCode,
       paymentMethod,
       existingOrderId,
+      specialInstructions,
     } = req.body;
 
     if (!restaurantId || !tableNumber || !items || !Array.isArray(items) || items.length === 0) {
@@ -287,7 +288,7 @@ router.post("/orders", async (req, res) => {
           quantity: Number(item.quantity) || 1,
           selectedVariant: normalizedVariant,
           selectedAddons: normalizedAddons,
-          specialInstructions: item.specialInstructions || "",
+          specialInstructions: item.specialInstructions || specialInstructions || "",
           status: "Pending",
         });
         newOrderItemIds.push(doc._id);
@@ -306,6 +307,11 @@ router.post("/orders", async (req, res) => {
       }
       if (customerPhone && !existingOrder.customerPhone) {
         existingOrder.customerPhone = customerPhone;
+      }
+      if (specialInstructions) {
+        existingOrder.specialInstructions = existingOrder.specialInstructions
+          ? `${existingOrder.specialInstructions}; ${specialInstructions}`
+          : specialInstructions;
       }
 
       // If order was marked ready, revert to preparing since new dishes are cooking
@@ -399,6 +405,7 @@ router.post("/orders", async (req, res) => {
       discount,
       total,
       couponCode,
+      specialInstructions: specialInstructions || "",
       paymentStatus: "Pending",
       paymentMethod: paymentMethod || "Cash",
       items: [],
@@ -439,7 +446,7 @@ router.post("/orders", async (req, res) => {
         quantity: Number(item.quantity) || 1,
         selectedVariant: normalizedVariant,
         selectedAddons: normalizedAddons,
-        specialInstructions: item.specialInstructions || "",
+        specialInstructions: item.specialInstructions || specialInstructions || "",
         status: "Pending",
       });
       orderItemIds.push(doc._id);

@@ -16,6 +16,7 @@ interface OrderItem {
   quantity: number;
   selectedVariant?: string;
   selectedAddons: Array<{ name: string; price: number }>;
+  specialInstructions?: string;
   status?: string;
 }
 
@@ -31,6 +32,7 @@ interface Order {
   customerPhone?: string;
   items: OrderItem[];
   status: "Pending" | "Preparing" | "Ready" | "Completed" | "Cancelled";
+  specialInstructions?: string;
   createdAt: string;
 }
 
@@ -220,6 +222,14 @@ export default function KitchenPage() {
                     </span>
                   </div>
 
+                  {/* Cooking Note for Chef */}
+                  {order.specialInstructions && (
+                    <div className="mx-5 mt-3 bg-rose-950/60 border border-rose-500/30 rounded-xl px-3.5 py-2 text-xs text-rose-200 flex items-start gap-2">
+                      <span className="font-black text-rose-400 shrink-0">👨‍🍳 NOTE:</span>
+                      <span className="font-bold">{order.specialInstructions}</span>
+                    </div>
+                  )}
+
                   {/* Items List (Checklist style for chefs) */}
                   <div className="p-5 flex-1 space-y-4">
                     {order.items.map((item, idx) => (
@@ -243,6 +253,11 @@ export default function KitchenPage() {
                           {item.selectedAddons?.length > 0 && (
                             <p className="text-[10px] text-rose-500/80 font-semibold mt-0.5">
                               + {item.selectedAddons.map((a) => a.name).join(", ")}
+                            </p>
+                          )}
+                          {item.specialInstructions && (
+                            <p className="text-[10px] text-amber-400 font-bold mt-0.5">
+                              Note: {item.specialInstructions}
                             </p>
                           )}
                         </div>

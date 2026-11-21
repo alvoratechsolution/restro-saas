@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   RotateCw,
   AlertCircle,
+  ChefHat,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -164,6 +165,9 @@ export default function TableOrderingPage({
   // Waiter modal states
   const [waiterModalOpen, setWaiterModalOpen] = useState(false);
   const [callingWaiter, setCallingWaiter] = useState(false);
+
+  // Cooking & Kitchen instructions state
+  const [cookingInstructions, setCookingInstructions] = useState("");
 
   // Coupon state
   const [couponCodeText, setCouponCodeText] = useState("");
@@ -623,6 +627,7 @@ export default function TableOrderingPage({
         customerPhone: cleanPhone,
         paymentMethod,
         couponCode: coupon?.code || undefined,
+        specialInstructions: cookingInstructions.trim() || undefined,
         existingOrderId: activeTableOrder?._id || activeOrderId || undefined,
         items: items.map((i) => ({
           menuItemId: i.menuItemId,
@@ -631,7 +636,7 @@ export default function TableOrderingPage({
           quantity: i.quantity,
           selectedVariant: i.selectedVariant?.name || undefined,
           selectedAddons: i.selectedAddons.map((a) => ({ name: a.name, price: a.price })),
-          specialInstructions: i.specialInstructions,
+          specialInstructions: i.specialInstructions || cookingInstructions.trim() || undefined,
         })),
       };
 
@@ -651,6 +656,7 @@ export default function TableOrderingPage({
         }
 
         clearCart();
+        setCookingInstructions("");
         setCartOpen(false);
         setActiveOrderId(res.orderId);
 
@@ -1176,44 +1182,75 @@ export default function TableOrderingPage({
                 ))}
               </div>
 
-              {/* Coupon Code Input */}
-              <div className="border-t border-slate-100 pt-4 space-y-2">
-                <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5 text-orange-500" /> Discount Coupon
-                </h4>
-                {coupon ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex justify-between items-center text-xs">
-                    <div>
-                      <p className="font-black text-emerald-800">Coupon: {coupon.code}</p>
-                      <p className="text-emerald-600 text-[11px]">
-                        Saved: {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
-                      </p>
-                    </div>
+              {/* Cooking & Kitchen Instructions (Replaced Coupon Section) */}
+              <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <ChefHat className="h-3.5 w-3.5 text-orange-500" /> Cooking &amp; Kitchen Notes
+                  </h4>
+                  {cookingInstructions && (
                     <button
-                      onClick={() => setCoupon(null)}
-                      className="text-red-500 hover:text-red-700 font-black cursor-pointer text-xs"
+                      type="button"
+                      onClick={() => setCookingInstructions("")}
+                      className="text-[11px] font-bold text-slate-400 hover:text-red-500 cursor-pointer transition-colors"
                     >
-                      Remove
+                      Clear
                     </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="ENTER COUPON CODE"
-                      value={couponCodeText}
-                      onChange={(e) => setCouponCodeText(e.target.value.toUpperCase())}
-                      className="flex-1 bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl px-3.5 py-2.5 text-base sm:text-xs font-bold focus:bg-white focus:outline-none focus:border-orange-500 transition-colors uppercase"
-                    />
-                    <Button
-                      onClick={handleValidateCoupon}
-                      disabled={couponValidationLoading}
-                      className="bg-slate-900 hover:bg-slate-800 text-white text-xs px-4 rounded-2xl cursor-pointer font-black border-none"
-                    >
-                      {couponValidationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                {/* Popular Quick Suggestions Chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "🌶️ Less Spicy",
+                    "🔥 Extra Spicy",
+                    "🧅 No Onion / Garlic",
+                    "🧀 Extra Crispy",
+                    "🧊 Less Ice",
+                    "🧂 Less Salt",
+                  ].map((chip) => {
+                    const clean = chip.replace(/^..?\s*/, "");
+                    const isSelected = cookingInstructions.includes(clean);
+                    return (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            const updated = cookingInstructions
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter((s) => s && s !== clean)
+                              .join(", ");
+                            setCookingInstructions(updated);
+                          } else {
+                            setCookingInstructions((prev) =>
+                              prev.trim() ? `${prev.trim()}, ${clean}` : clean
+                            );
+                          }
+                        }}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-orange-50 text-orange-700 border-orange-300 shadow-2xs"
+                            : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200/90"
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Text Input for Custom Cooking Instructions */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Add cooking instructions (e.g. less spicy, make it extra crispy)..."
+                    value={cookingInstructions}
+                    onChange={(e) => setCookingInstructions(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-2xl px-3.5 py-2.5 text-base sm:text-xs font-semibold focus:bg-white focus:outline-none focus:border-orange-500 transition-colors placeholder:text-slate-400"
+                  />
+                </div>
               </div>
 
               {/* Customer Details Form (Never zooms on mobile) */}
