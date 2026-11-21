@@ -140,17 +140,17 @@ export default function PlansPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Subscription Plans</h1>
-          <p className="text-slate-400 mt-1">Configure pricing tiers, tenant usage allowances, and feature locks.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Subscription Plans</h1>
+          <p className="text-slate-500 text-sm mt-1">Configure pricing tiers, tenant usage allowances, and feature locks.</p>
         </div>
         <Button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2 shadow-lg shadow-orange-500/10"
+          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           Create Plan
@@ -166,47 +166,47 @@ export default function PlansPage() {
           {plans.map((plan) => (
             <Card
               key={plan._id}
-              className={`p-6 bg-slate-900/30 border backdrop-blur-xl flex flex-col justify-between h-full relative ${
-                plan.isActive ? "border-slate-800" : "border-red-950/40 opacity-70"
+              className={`p-6 bg-white border rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between h-full relative ${
+                plan.isActive ? "border-slate-200/80" : "border-red-200 opacity-70"
               }`}
             >
               {!plan.isActive && (
-                <div className="absolute top-3 right-3 text-red-500 flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider">
+                <div className="absolute top-3 right-3 text-red-500 flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
                   <XCircle className="h-3 w-3" /> Inactive
                 </div>
               )}
               <div>
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                  <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
                   <button
                     onClick={() => handleEdit(plan)}
-                    className="p-2 text-slate-500 hover:text-slate-200 transition-colors"
+                    className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors cursor-pointer"
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="flex items-baseline mb-6 gap-1">
-                  <span className="text-4xl font-extrabold text-white">${plan.price}</span>
-                  <span className="text-slate-400 text-xs font-semibold">/{plan.billingCycle}</span>
+                  <span className="text-4xl font-black text-slate-900">₹{plan.price}</span>
+                  <span className="text-slate-500 text-xs font-bold">/{plan.billingCycle}</span>
                 </div>
 
-                <ul className="space-y-3.5 mb-8 text-sm text-slate-300">
+                <ul className="space-y-3.5 mb-8 text-sm text-slate-600">
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>Max {plan.maxBranches} Branch(es)</span>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="font-medium">Max {plan.maxBranches} Branch(es)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>Up to {plan.maxTablesPerBranch} Tables/Branch</span>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="font-medium">Up to {plan.maxTablesPerBranch} Tables/Branch</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    <span>Max {plan.maxMenuItems} Menu Items</span>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="font-medium">Max {plan.maxMenuItems} Menu Items</span>
                   </li>
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-center gap-2.5">
                       <CheckCircle2 className="h-4 w-4 text-orange-500 shrink-0" />
-                      <span className="capitalize">{feature}</span>
+                      <span className="capitalize font-medium">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -218,11 +218,11 @@ export default function PlansPage() {
 
       {/* Plan Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-[#0f1422] border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 shrink-0">
-              <h2 className="text-lg font-black text-white flex items-center gap-2.5">
-                <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 shrink-0">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2.5">
+                <div className="p-2 bg-orange-50 border border-orange-200 rounded-xl text-orange-600">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 {editingPlan ? "Edit Subscription Plan" : "Create New Subscription Plan"}
@@ -230,7 +230,7 @@ export default function PlansPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -243,28 +243,28 @@ export default function PlansPage() {
                 placeholder="Basic Plan"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
-                labelClassName="text-slate-300 font-bold text-xs"
+                className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                labelClassName="text-slate-700 font-bold text-xs"
                 required
               />
 
               <div className="grid grid-cols-2 gap-4">
                 <Input
-                  label="Price ($) *"
+                  label="Price (₹) *"
                   type="number"
                   placeholder="29"
                   value={price}
                   onChange={(e) => setPrice(Number(e.target.value))}
-                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
-                  labelClassName="text-slate-300 font-bold text-xs"
+                  className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                  labelClassName="text-slate-700 font-bold text-xs"
                   required
                 />
                 <Select
                   label="Billing Cycle *"
                   value={billingCycle}
                   onChange={(e) => setBillingCycle(e.target.value)}
-                  className="bg-[#161c2d] border-slate-700/80 text-white rounded-xl"
-                  labelClassName="text-slate-300 font-bold text-xs"
+                  className="bg-slate-50 border-slate-200 text-slate-900 rounded-xl focus:bg-white focus:border-orange-500"
+                  labelClassName="text-slate-700 font-bold text-xs"
                   options={[
                     { value: "monthly", label: "Monthly" },
                     { value: "yearly", label: "Yearly" },
@@ -279,8 +279,8 @@ export default function PlansPage() {
                   type="number"
                   value={maxBranches}
                   onChange={(e) => setMaxBranches(Number(e.target.value))}
-                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
-                  labelClassName="text-slate-300 font-bold text-xs"
+                  className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                  labelClassName="text-slate-700 font-bold text-xs"
                   required
                 />
                 <Input
@@ -288,8 +288,8 @@ export default function PlansPage() {
                   type="number"
                   value={maxTablesPerBranch}
                   onChange={(e) => setMaxTablesPerBranch(Number(e.target.value))}
-                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
-                  labelClassName="text-slate-300 font-bold text-xs"
+                  className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                  labelClassName="text-slate-700 font-bold text-xs"
                   required
                 />
                 <Input
@@ -297,14 +297,14 @@ export default function PlansPage() {
                   type="number"
                   value={maxMenuItems}
                   onChange={(e) => setMaxMenuItems(Number(e.target.value))}
-                  className="bg-[#161c2d] border-slate-700/80 text-white placeholder:text-slate-500 rounded-xl"
-                  labelClassName="text-slate-300 font-bold text-xs"
+                  className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                  labelClassName="text-slate-700 font-bold text-xs"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
                   Select Plan Features *
                 </label>
                 <div className="grid grid-cols-1 gap-2.5 max-h-48 overflow-y-auto p-1">
@@ -322,15 +322,15 @@ export default function PlansPage() {
                         }}
                         className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${
                           isChecked
-                            ? "bg-orange-500/10 border-orange-500/35 text-white"
-                            : "bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-400"
+                            ? "bg-orange-50/70 border-orange-200 text-slate-900"
+                            : "bg-slate-50 border-slate-200 hover:border-slate-300 text-slate-600"
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isChecked}
                           readOnly
-                          className="mt-0.5 rounded bg-slate-950 border-slate-800 text-orange-500 focus:ring-orange-500/20 pointer-events-none"
+                          className="mt-0.5 rounded bg-white border-slate-300 text-orange-500 focus:ring-orange-500/20 pointer-events-none"
                         />
                         <div className="space-y-0.5">
                           <p className="text-xs font-bold">{feat.label}</p>
@@ -348,20 +348,20 @@ export default function PlansPage() {
                   id="isActiveCheck"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-800 text-orange-500 focus:ring-orange-500/20"
+                  className="rounded bg-white border-slate-300 text-orange-500 focus:ring-orange-500/20 cursor-pointer"
                 />
-                <label htmlFor="isActiveCheck" className="text-sm text-slate-300 font-medium">
+                <label htmlFor="isActiveCheck" className="text-sm text-slate-700 font-medium cursor-pointer">
                   Plan is active and available for subscribe
                 </label>
               </div>
             </form>
 
             {/* Fixed Modal Footer with Action Buttons */}
-            <div className="p-4 border-t border-slate-800 bg-slate-900/60 flex justify-end gap-3 shrink-0">
+            <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex justify-end gap-3 shrink-0">
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-colors"
+                className="bg-slate-200/80 hover:bg-slate-300 text-slate-700 font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition-colors"
               >
                 Cancel
               </button>

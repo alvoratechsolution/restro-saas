@@ -109,8 +109,8 @@ export default function SuperAdminDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Overview Dashboard</h1>
-        <p className="text-slate-400 mt-1">Real-time statistics across all tenants and plans in the ecosystem.</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Overview Dashboard</h1>
+        <p className="text-slate-500 text-sm mt-1">Real-time statistics across all tenants and plans in the ecosystem.</p>
       </div>
 
       {isLoading ? (
@@ -120,52 +120,52 @@ export default function SuperAdminDashboard() {
       ) : (
         <>
           {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Restaurants</p>
-                  <p className="text-3xl font-bold text-white mt-2">{totalRestaurants}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Restaurants</p>
+                  <p className="text-3xl font-black text-slate-900 mt-1">{totalRestaurants}</p>
                 </div>
-                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
+                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-200/60">
                   <Store className="h-6 w-6" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl">
+            <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Tenants</p>
-                  <p className="text-3xl font-bold text-emerald-500 mt-2">{activeRestaurants}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Tenants</p>
+                  <p className="text-3xl font-black text-emerald-600 mt-1">{activeRestaurants}</p>
                 </div>
-                <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500 border border-emerald-500/20">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200/60">
                   <CheckCircle className="h-6 w-6" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl">
+            <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Monthly SaaS MRR</p>
-                  <p className="text-3xl font-bold text-white mt-2">
-                    ${estimatedMonthlyRevenue.toLocaleString()}
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Monthly SaaS MRR</p>
+                  <p className="text-3xl font-black text-slate-900 mt-1">
+                    ₹{estimatedMonthlyRevenue.toLocaleString()}
                   </p>
                 </div>
-                <div className="p-3 bg-orange-500/10 rounded-xl text-orange-500 border border-orange-500/20">
+                <div className="p-3 bg-orange-50 text-orange-600 rounded-xl border border-orange-200/60">
                   <TrendingUp className="h-6 w-6" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl">
+            <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Trialing Users</p>
-                  <p className="text-3xl font-bold text-amber-500 mt-2">{trialingCount}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Trialing Users</p>
+                  <p className="text-3xl font-black text-amber-600 mt-1">{trialingCount}</p>
                 </div>
-                <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+                <div className="p-3 bg-amber-50 text-amber-600 rounded-xl border border-amber-200/60">
                   <Calendar className="h-6 w-6" />
                 </div>
               </div>
@@ -173,10 +173,10 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* Tenants Table */}
-          <Card className="bg-slate-900/20 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
-            <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
+          <Card className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div>
-                <h2 className="text-lg font-bold text-white">Registered Restaurants</h2>
+                <h2 className="text-base font-extrabold text-slate-900">Registered Restaurants</h2>
                 <p className="text-slate-500 text-xs mt-0.5">Manage tenants, modify subscription plans, or assign domains.</p>
               </div>
             </div>
@@ -184,16 +184,16 @@ export default function SuperAdminDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-slate-800/80 bg-slate-900/40 text-slate-400 font-semibold">
-                    <th className="py-4 px-6">Restaurant</th>
-                    <th className="py-4 px-6">Billing Info</th>
-                    <th className="py-4 px-6">Plan & Status</th>
-                    <th className="py-4 px-6">Custom Domain</th>
-                    <th className="py-4 px-6">Is Active</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
+                  <tr className="border-b border-slate-200/80 bg-slate-50/90 text-slate-600 font-bold text-xs uppercase tracking-wider">
+                    <th className="py-3.5 px-6">Restaurant</th>
+                    <th className="py-3.5 px-6">Billing Info</th>
+                    <th className="py-3.5 px-6">Plan & Status</th>
+                    <th className="py-3.5 px-6">Custom Domain</th>
+                    <th className="py-3.5 px-6">Is Active</th>
+                    <th className="py-3.5 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-slate-100 text-slate-700">
                   {restaurants.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-slate-500">
@@ -202,33 +202,33 @@ export default function SuperAdminDashboard() {
                     </tr>
                   ) : (
                     restaurants.map((rest) => (
-                      <tr key={rest._id} className="hover:bg-slate-900/20 transition-colors">
+                      <tr key={rest._id} className="hover:bg-slate-50/60 transition-colors">
                         <td className="py-4 px-6">
-                          <div className="font-semibold text-white">{rest.name}</div>
-                          <div className="text-xs text-slate-500">slug: /{rest.slug}</div>
+                          <div className="font-bold text-slate-900">{rest.name}</div>
+                          <div className="text-xs text-slate-400">slug: /{rest.slug}</div>
                         </td>
                         <td className="py-4 px-6">
-                          <div>{rest.billingEmail}</div>
-                          <div className="text-xs text-slate-500">{rest.phone || "No phone"}</div>
+                          <div className="font-medium text-slate-800">{rest.billingEmail}</div>
+                          <div className="text-xs text-slate-400">{rest.phone || "No phone"}</div>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex flex-col gap-1 items-start">
-                            <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium border border-slate-700">
+                            <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold border border-slate-200">
                               {rest.subscriptionPlan?.name || "No Plan"}
                             </span>
                             <span
                               className={`text-[10px] uppercase font-bold tracking-wider ${
                                 rest.subscriptionStatus === "active"
-                                  ? "text-emerald-400"
+                                  ? "text-emerald-600"
                                   : rest.subscriptionStatus === "trialing"
-                                  ? "text-amber-400"
-                                  : "text-red-400"
+                                  ? "text-amber-600"
+                                  : "text-red-500"
                               }`}
                             >
                               {rest.subscriptionStatus}
                             </span>
                             {rest.subscriptionEndsAt && (
-                              <span className="text-[10px] text-slate-500">
+                              <span className="text-[10px] text-slate-400">
                                 ends: {new Date(rest.subscriptionEndsAt).toLocaleDateString()}
                               </span>
                             )}
@@ -239,7 +239,7 @@ export default function SuperAdminDashboard() {
                             <div className="flex items-center gap-2">
                               <input
                                 type="text"
-                                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-orange-500"
+                                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-900 outline-none focus:border-orange-500"
                                 value={customDomainText}
                                 placeholder="domain.com"
                                 onChange={(e) => setCustomDomainText(e.target.value)}
@@ -253,18 +253,18 @@ export default function SuperAdminDashboard() {
                               </Button>
                               <Button
                                 size="sm"
-                                className="bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] px-2 py-1 h-auto"
+                                className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] px-2 py-1 h-auto"
                                 onClick={() => setEditingDomainRestId(null)}
                               >
                                 Cancel
                               </Button>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1.5 text-xs text-slate-400 group">
-                              <Globe className="h-3.5 w-3.5 text-slate-500" />
+                            <div className="flex items-center gap-1.5 text-xs text-slate-600 group">
+                              <Globe className="h-3.5 w-3.5 text-slate-400" />
                               <span>{rest.customDomain || "None"}</span>
                               <button
-                                className="opacity-0 group-hover:opacity-100 text-[10px] text-orange-500 hover:underline ml-1 cursor-pointer"
+                                className="opacity-0 group-hover:opacity-100 text-[10px] text-orange-600 font-bold hover:underline ml-1 cursor-pointer"
                                 onClick={() => {
                                   setEditingDomainRestId(rest._id);
                                   setCustomDomainText(rest.customDomain || "");
@@ -279,7 +279,7 @@ export default function SuperAdminDashboard() {
                           <button
                             onClick={() => handleToggleActive(rest._id, rest.isActive)}
                             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                              rest.isActive ? "bg-emerald-500" : "bg-slate-800"
+                              rest.isActive ? "bg-emerald-500" : "bg-slate-300"
                             }`}
                           >
                             <span
@@ -294,8 +294,8 @@ export default function SuperAdminDashboard() {
                             size="sm"
                             className={`${
                               rest.isSuspended
-                                ? "bg-amber-600/10 text-amber-500 hover:bg-amber-600/20 border border-amber-500/20"
-                                : "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+                                ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                                : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
                             } text-xs font-semibold px-3 py-1.5`}
                             onClick={() => handleToggleSuspend(rest._id, rest.isSuspended)}
                           >

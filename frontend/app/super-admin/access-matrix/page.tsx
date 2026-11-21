@@ -118,20 +118,20 @@ export default function AccessMatrixPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <ShieldCheck className="h-8 w-8 text-orange-500" /> System Access Matrix
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <ShieldCheck className="h-7 w-7 text-orange-600" /> System Access Matrix
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-500 text-sm mt-1">
             Directly map, toggle, and configure feature permissions across subscription tiers.
           </p>
         </div>
       </div>
 
       {/* Custom feature creation panel */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/30 border border-slate-800 p-5 rounded-2xl backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs">
         <div className="space-y-0.5">
-          <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-orange-500" /> Create Custom Module
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <Zap className="h-4 w-4 text-orange-600" /> Create Custom Module
           </h3>
           <p className="text-[11px] text-slate-500">
             Define a new permission key (e.g. inventory-mgmt) to dynamically register a workspace.
@@ -143,7 +143,7 @@ export default function AccessMatrixPage() {
             placeholder="e.g. billing-reports"
             value={newFeatureName}
             onChange={(e) => setNewFeatureName(e.target.value)}
-            className="bg-slate-950 border border-slate-850 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500/50 w-full sm:w-48 transition-colors"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-orange-500 w-full sm:w-48 transition-colors"
             required
           />
           <button
@@ -160,52 +160,52 @@ export default function AccessMatrixPage() {
           <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
         </div>
       ) : (
-        <Card className="overflow-hidden border border-slate-800 bg-slate-900/20 backdrop-blur-xl rounded-2xl">
+        <Card className="overflow-hidden border border-slate-200/80 bg-white rounded-2xl shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-850 bg-slate-900/60">
-                  <th className="p-5 text-xs font-bold text-slate-400 uppercase tracking-wider min-w-[280px]">
+                <tr className="border-b border-slate-200/80 bg-slate-50/90 text-slate-600">
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider min-w-[280px]">
                     SaaS Core Modules
                   </th>
                   {plans.map((plan) => (
-                    <th key={plan._id} className="p-5 text-center min-w-[150px]">
+                    <th key={plan._id} className="p-4 text-center min-w-[150px]">
                       <div className="space-y-0.5">
-                        <span className="text-sm font-bold text-white block">{plan.name}</span>
-                        <span className="text-[10px] text-orange-500 font-semibold uppercase tracking-wider">
-                          ${plan.price} / month
+                        <span className="text-sm font-bold text-slate-900 block">{plan.name}</span>
+                        <span className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">
+                          ₹{plan.price} / month
                         </span>
                       </div>
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-850/60">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {allFeatures.map((feature) => (
-                  <tr key={feature.id} className="hover:bg-slate-900/20 transition-colors">
-                    <td className="p-5">
-                      <div className="space-y-1">
-                        <span className="text-sm font-extrabold text-white">{feature.label}</span>
-                        <span className="text-xs text-slate-450 block leading-normal">{feature.description}</span>
+                  <tr key={feature.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="p-4">
+                      <div className="space-y-0.5">
+                        <span className="text-sm font-bold text-slate-900 block">{feature.label}</span>
+                        <span className="text-xs text-slate-500 block leading-normal">{feature.description}</span>
                       </div>
                     </td>
                     {plans.map((plan) => {
                       const isEnabled = plan.features?.includes(feature.id);
                       return (
-                        <td key={plan._id} className="p-5 text-center">
+                        <td key={plan._id} className="p-4 text-center">
                           <button
                             onClick={() => handleToggleFeature(plan, feature.id)}
                             disabled={updatePlanFeaturesMutation.isPending}
-                            className={`inline-flex items-center justify-center h-10 w-10 rounded-xl border transition-all duration-200 cursor-pointer ${
+                            className={`inline-flex items-center justify-center h-9 w-9 rounded-xl border transition-all duration-200 cursor-pointer ${
                               isEnabled
-                                ? "bg-orange-500/10 border-orange-500/25 text-orange-400 hover:bg-orange-500/20"
-                                : "bg-slate-950/40 border-slate-850 text-slate-500 hover:border-slate-800 hover:text-slate-400"
+                                ? "bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100 shadow-2xs"
+                                : "bg-slate-100 border-slate-200 text-slate-400 hover:text-slate-600"
                             }`}
                           >
                             {isEnabled ? (
-                              <Check className="h-5 w-5 stroke-[2.5]" />
+                              <Check className="h-4 w-4 stroke-[2.5]" />
                             ) : (
-                              <X className="h-4 w-4 stroke-[2.5]" />
+                              <X className="h-3.5 w-3.5 stroke-[2.5]" />
                             )}
                           </button>
                         </td>
