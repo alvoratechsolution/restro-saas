@@ -146,122 +146,142 @@ export default function RegisterPage() {
         </div>
 
         {/* Form card container */}
-        <div className="bg-gradient-to-b from-slate-900/30 to-slate-950/40 border border-slate-800/60 backdrop-blur-2xl rounded-[32px] p-8 shadow-2xl shadow-black/50">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-[#0f1422]/90 border border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 backdrop-blur-2xl space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Restaurant name */}
-            <div className="relative">
-              <Store className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-              <Input
-                label="Restaurant Name *"
-                type="text"
-                placeholder="The Gourmet Cafe"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                className="pl-11"
-                required
-                disabled={loading}
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-300 block">
+                Restaurant Name *
+              </label>
+              <div className="relative">
+                <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="The Gourmet Cafe"
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             {/* Owner name */}
-            <div className="relative">
-              <User className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-              <Input
-                label="Owner Name *"
-                type="text"
-                placeholder="John Doe"
-                value={ownerName}
-                onChange={(e) => setOwnerName(e.target.value)}
-                className="pl-11"
-                required
-                disabled={loading}
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-300 block">
+                Owner Name *
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="John Doe"
+                  value={ownerName}
+                  onChange={(e) => setOwnerName(e.target.value)}
+                  className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             {/* Email and phone inline */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-                <Input
-                  label="Email Address *"
-                  type="email"
-                  placeholder="admin@cafe.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11"
-                  required
-                  disabled={loading}
-                />
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Email Address *
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder="admin@cafe.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
 
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-                <Input
-                  label="Phone Number *"
-                  type="tel"
-                  placeholder="9999988888"
-                  value={phone}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    if (val.length <= 10) {
-                      setPhone(val);
-                    }
-                  }}
-                  className="pl-11"
-                  required
-                  disabled={loading}
-                />
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Phone Number *
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <input
+                    type="tel"
+                    placeholder="9999988888"
+                    value={phone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 10) {
+                        setPhone(val);
+                      }
+                    }}
+                    className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Message request */}
-            <div className="relative">
-              <MessageSquare className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-              <Textarea
-                label="Requirements / Message (Optional)"
-                placeholder="Tell us about your restaurant branches, tables, or custom request..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="pl-11"
-                disabled={loading}
-                rows={3}
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-300 block">
+                Requirements / Message (Optional)
+              </label>
+              <div className="relative">
+                <MessageSquare className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                <textarea
+                  placeholder="Tell us about your restaurant branches, tables, or custom request..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                  disabled={loading}
+                  rows={3}
+                />
+              </div>
             </div>
 
-            <div className="text-[10px] text-slate-500 font-medium">
+            <div className="text-[10px] text-slate-400 font-medium">
               * Required fields. By submitting, you agree to our Terms of Service.
             </div>
 
             {/* Submit button */}
-            <Button
+            <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-655 hover:to-amber-705 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform duration-100 cursor-pointer"
+              className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:via-amber-600 hover:to-orange-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                  Submitting request...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Submitting request...</span>
                 </>
               ) : (
                 <>
-                  Submit Inquiry
-                  <ArrowRight className="h-4.5 w-4.5" />
+                  <span>Submit Inquiry</span>
+                  <ArrowRight className="h-4 w-4" />
                 </>
               )}
-            </Button>
+            </button>
           </form>
 
           {/* Sign in page link */}
-          <div className="mt-8 pt-6 border-t border-slate-850/80 text-center">
-            <p className="text-xs text-slate-400 leading-normal">
+          <div className="pt-4 border-t border-slate-800/80 text-center">
+            <p className="text-xs text-slate-400">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-bold text-orange-500 hover:text-orange-400 transition-colors"
+                className="font-bold text-orange-400 hover:text-orange-300 transition-colors"
               >
-                Sign In
+                Sign In ↗
               </Link>
             </p>
           </div>

@@ -81,76 +81,88 @@ function ResetPasswordForm() {
       </div>
 
       {/* Reset card container */}
-      <div className="bg-gradient-to-b from-slate-900/30 to-slate-950/40 border border-slate-800/60 backdrop-blur-2xl rounded-[32px] p-8 shadow-2xl shadow-black/50">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="bg-[#0f1422]/90 border border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 backdrop-blur-2xl space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           
           {/* Email field */}
-          <div className="relative">
-            <Mail className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="name@restaurant.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-11"
-              required
-              disabled={loading || !!searchParams.get("email")}
-            />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-300 block">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <input
+                type="email"
+                placeholder="name@restaurant.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                required
+                disabled={loading || !!searchParams.get("email")}
+              />
+            </div>
           </div>
 
           {/* OTP code field */}
-          <div className="relative">
-            <KeyRound className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-            <Input
-              label="OTP Code"
-              type="text"
-              placeholder="6-digit code"
-              maxLength={6}
-              value={otpCode}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, ""); // Limit OTP to digits
-                setOtpCode(val);
-              }}
-              className="pl-11"
-              required
-              disabled={loading}
-            />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-300 block">
+              Verification Code (OTP)
+            </label>
+            <div className="relative">
+              <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="6-digit code"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setOtpCode(val);
+                }}
+                className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50 font-mono tracking-widest text-center"
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* New password field */}
-          <div className="relative">
-            <Lock className="absolute left-3.5 top-[39px] h-4.5 w-4.5 text-slate-500 pointer-events-none" />
-            <Input
-              label="New Password"
-              type="password"
-              placeholder="••••••••"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="pl-11"
-              required
-              disabled={loading}
-            />
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-300 block">
+              New Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-[#161c2d] border border-slate-700/80 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 text-white placeholder:text-slate-500 text-sm rounded-xl pl-10 pr-4 py-2.5 sm:py-3 transition-all duration-200 outline-none disabled:opacity-50"
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* Submit button */}
-          <Button
+          <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-655 hover:to-amber-705 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-transform duration-100 cursor-pointer"
+            className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:via-amber-600 hover:to-orange-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60"
           >
             {loading ? (
               <>
-                <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                Resetting password...
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Resetting password...</span>
               </>
             ) : (
               <>
-                Reset Password
-                <ArrowRight className="h-4.5 w-4.5" />
+                <span>Reset Password</span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
-          </Button>
+          </button>
         </form>
       </div>
     </div>
