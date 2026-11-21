@@ -26,8 +26,11 @@ import {
   Check,
   Lock,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 import Button from "@/components/ui/button";
+
+const SYSTEM_FEATURES = ["menu", "orders", "qr-tables", "staff", "coupons", "settings"];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -39,6 +42,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     success: boolean;
     data: {
       name: string;
+      slug?: string;
+      logo?: string;
       subscriptionPlan?: {
         name: string;
         features: string[];
@@ -50,9 +55,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     enabled: status === "authenticated",
   });
 
-  const restaurantName = restaurantResponse?.data?.name || "Admin Console";
+  const restaurantName = restaurantResponse?.data?.name || "Tasty Bites";
+  const restaurantSlug = restaurantResponse?.data?.slug || "tasty-bites";
+  const restaurantLogo = restaurantResponse?.data?.logo || "/logo.png";
+  const planName = restaurantResponse?.data?.subscriptionPlan?.name || "Trial Plan";
+  const activeFeatures = restaurantResponse?.data?.subscriptionPlan?.features || [
+    "menu",
+    "orders",
+    "qr-tables",
+    "staff",
+    "coupons",
+    "settings",
+  ];
 
-  const branchId = (session?.user as any)?.branchId;
+  const branchId = (session?.user as unknown as { branchId?: string })?.branchId;
   const [activeCalls, setActiveCalls] = useState<Array<{ id: string; tableNumber: string; time: string }>>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -61,10 +77,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("waiter-called", (data: any) => {
-      // Play high pitch bell sound
+    socket.on("waiter-called", (data: { tableNumber: string }) => {
       try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
 
@@ -72,8 +87,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         gainNode.connect(audioCtx.destination);
 
         osc.type = "sine";
-        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime); // B5 note
-        osc.frequency.exponentialRampToValueAtTime(1318.51, audioCtx.currentTime + 0.15); // E6
+        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1318.51, audioCtx.currentTime + 0.15);
 
         gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
@@ -112,20 +127,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-slate-400">
+      <div className="flex h-screen items-center justify-center bg-slate-50 text-slate-500 font-bold">
         Loading Session...
       </div>
     );
   }
 
-  const role = (session?.user as any)?.role;
+  const role = (session?.user as unknown as { role?: string })?.role;
   if (!session || (role !== "RESTAURANT_ADMIN" && role !== "SUPER_ADMIN")) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center">
-        <ShieldCheck className="h-16 w-16 text-red-500 mb-4 animate-bounce" />
-        <h1 className="text-2xl font-bold text-white mb-2">Unauthorized Access</h1>
-        <p className="text-slate-400 mb-6">You must be logged in as a Restaurant Admin to access this panel.</p>
-        <Button onClick={() => router.push("/login")} className="bg-orange-500 hover:bg-orange-600">
+      <div className="flex h-screen flex-col items-center justify-center bg-slate-50 px-4 text-center">
+        <ShieldCheck className="h-16 w-16 text-rose-500 mb-4 animate-bounce" />
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Unauthorized Access</h1>
+        <p className="text-slate-500 mb-6">You must be logged in as a Restaurant Admin to access this panel.</p>
+        <Button onClick={() => router.push("/login")} className="bg-orange-500 hover:bg-orange-600 text-white font-bold">
           Go to Login
         </Button>
       </div>
@@ -138,22 +153,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Categories", href: "/admin/categories", icon: Tags, feature: "menu" },
     { name: "Menu Items", href: "/admin/menu", icon: UtensilsCrossed, feature: "menu" },
     { name: "Tables & QRs", href: "/admin/tables", icon: TableProperties, feature: "qr-tables" },
-    { name: "Staff Credentials", href: "/admin/staff", icon: Users, feature: "staff" },
+    { name: "Staff Members", href: "/admin/staff", icon: Users, feature: "staff" },
     { name: "Coupons", href: "/admin/coupons", icon: Ticket, feature: "coupons" },
-    { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
+    { name: "Settings", href: "/admin/settings", icon: SettingsIcon, feature: "settings" },
   ];
-
-  const activeFeatures = restaurantResponse?.data?.subscriptionPlan?.features || [];
-  const planName = restaurantResponse?.data?.subscriptionPlan?.name || "Trial Plan";
-
-  const SYSTEM_FEATURES = ["menu", "orders", "qr-tables", "staff", "coupons"];
 
   const filteredNavItems = navItems.filter((item) => {
     if (role === "SUPER_ADMIN") return true;
     return !item.feature || activeFeatures.includes(item.feature);
   });
 
-  // Dynamically inject custom features from active plan into sidebar links
   activeFeatures.forEach((feature) => {
     if (!SYSTEM_FEATURES.includes(feature)) {
       if (!filteredNavItems.some((item) => item.feature === feature)) {
@@ -182,21 +191,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     : currentNavItem?.name;
 
   return (
-    <div className="min-h-screen bg-[#080b12] text-slate-100 flex flex-col md:flex-row font-sans">
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-slate-800/80 bg-[#0d111c]/90 backdrop-blur-xl p-6 shrink-0 shadow-2xl">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col md:flex-row font-sans">
+      {/* ================= SIDEBAR FOR DESKTOP ================= */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-slate-800/80 bg-[#0b0f19] p-6 shrink-0 shadow-2xl z-20">
+        {/* Brand identity header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-orange-500/25 bg-slate-900 border border-orange-500/30 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
+            <img src={restaurantLogo} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="overflow-hidden">
-            <h1 className="font-extrabold text-white text-base tracking-tight truncate max-w-[150px]">{restaurantName}</h1>
-            <p className="text-[9px] text-orange-400 font-bold uppercase tracking-wider truncate">ServeDesk · Alvora Tech</p>
+            <h1 className="font-black text-white text-base tracking-tight truncate max-w-[150px]">
+              {restaurantName}
+            </h1>
+            <p className="text-[9px] text-orange-400 font-bold uppercase tracking-wider truncate">
+              ServeDesk · Alvora Tech
+            </p>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1.5">
+        {/* Navigation links */}
+        <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
           {filteredNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -206,7 +221,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? "bg-orange-500/15 border-l-4 border-orange-500 text-orange-400 font-bold shadow-md shadow-orange-500/10"
+                    ? "bg-gradient-to-r from-orange-500/20 to-orange-500/10 border-l-4 border-orange-500 text-orange-400 font-bold shadow-md shadow-orange-500/10"
                     : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                 }`}
               >
@@ -217,6 +232,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
+        {/* Bottom User Profile */}
         <div className="mt-auto pt-6 border-t border-slate-800/80">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
@@ -229,185 +245,242 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <button
             onClick={() => nextSignOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-200 cursor-pointer"
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-200 cursor-pointer"
           >
-            <LogOut className="h-5 w-5" />
-            Logout
+            <LogOut className="h-4.5 w-4.5" />
+            Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Mobile Top Header */}
-      <header className="md:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-[#0d111c]/90 backdrop-blur-xl z-20 shadow-md">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg overflow-hidden shadow-sm bg-slate-900 border border-orange-500/30 shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
-          </div>
-          <span className="font-extrabold text-white text-base tracking-tight truncate max-w-[200px]">{restaurantName}</span>
-        </div>
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 text-slate-300 hover:text-white transition-colors"
-        >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </header>
+      {/* ================= RIGHT MAIN BODY WRAPPER ================= */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+        {/* ================= ADMIN TOP BAR ================= */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-6 py-3.5 shadow-xs flex items-center justify-between gap-4">
+          {/* Left: Mobile Menu Toggle + Restaurant Brand Display */}
+          <div className="flex items-center gap-3.5">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-10 bg-slate-950/80 backdrop-blur-md pt-16 flex flex-col p-6">
-          <div className="bg-[#0d111c] rounded-2xl p-4 shadow-2xl border border-slate-800 space-y-2">
-            <nav className="space-y-1">
-              {filteredNavItems.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      isActive
-                        ? "bg-orange-500/15 text-orange-400 border-l-4 border-orange-500 font-bold"
-                        : "text-slate-300 hover:text-white hover:bg-slate-800"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="pt-4 border-t border-slate-800">
+            {/* Restaurant Brand Identity: Logo beside Restaurant Name */}
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl overflow-hidden shadow-md shadow-orange-500/20 bg-slate-900 border border-orange-500/30 shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={restaurantLogo} alt="Restaurant Logo" className="h-full w-full object-cover" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-slate-900 text-lg tracking-tight leading-none truncate max-w-[160px] sm:max-w-xs">
+                    {restaurantName}
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Store
+                  </span>
+                </div>
+                <p className="text-[10px] font-bold text-orange-600 tracking-wide mt-1">
+                  ServeDesk · Powered by Alvora Tech Solution
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Live Menu Shortcut, Waiter Alerts Bell, User Profile Pill */}
+          <div className="flex items-center gap-3">
+            {/* Quick Preview Customer QR Menu Link */}
+            <a
+              href={`/${restaurantSlug}/table/1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer"
+              title="Open customer digital menu view in new tab"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Live QR Menu
+            </a>
+
+            {/* Waiter Assistance Bell Notification */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="bg-slate-50 hover:bg-slate-100 border border-slate-200 p-2.5 rounded-xl text-slate-700 hover:text-slate-900 transition-all shadow-xs relative cursor-pointer"
+                title="Waiter Call Notifications"
+              >
+                <Bell className="h-4.5 w-4.5" />
+                {activeCalls.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-[9px] font-black h-5 w-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce shadow-sm">
+                    {activeCalls.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Waiter Calls Dropdown Menu */}
+              {showDropdown && (
+                <div className="absolute right-0 mt-2.5 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-3 duration-150">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Waiter Assistance Calls</h4>
+                    {activeCalls.length > 0 && (
+                      <button
+                        onClick={() => setActiveCalls([])}
+                        className="text-[10px] font-bold text-orange-600 hover:underline cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {activeCalls.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-4 text-center">No active service calls.</p>
+                    ) : (
+                      activeCalls.map((call) => (
+                        <div
+                          key={call.id}
+                          className="flex justify-between items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs gap-3"
+                        >
+                          <div className="space-y-0.5">
+                            <p className="font-extrabold text-slate-900">Table {call.tableNumber}</p>
+                            <p className="text-[10px] text-slate-500 font-semibold">Requested: {call.time}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setActiveCalls((prev) => prev.filter((c) => c.id !== call.id));
+                              toast.success(`Cleared Table ${call.tableNumber} alert`);
+                            }}
+                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 p-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User Profile Pill */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <div className="h-8 w-8 rounded-xl bg-orange-100 text-orange-700 font-black text-xs flex items-center justify-center border border-orange-200 shadow-xs">
+                {(session?.user?.name || "A")[0].toUpperCase()}
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-xs font-bold text-slate-900 leading-none truncate max-w-[110px]">
+                  {session?.user?.name || "Admin"}
+                </p>
+                <span className="text-[10px] font-semibold text-slate-400">
+                  Restaurant Admin
+                </span>
+              </div>
               <button
                 onClick={() => nextSignOut({ callbackUrl: "/login" })}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-rose-400 hover:bg-rose-500/10 transition-all"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                title="Logout"
               >
-                <LogOut className="h-5 w-5" />
-                Logout
+                <LogOut className="h-4 w-4" />
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto max-w-7xl mx-auto w-full">
-        {/* Top Navbar Header */}
-        <div className="flex justify-end items-center gap-4 mb-6 pb-4 border-b border-slate-800/80 relative">
-          <div className="relative">
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="bg-[#0d111c] border border-slate-800 hover:border-slate-700 p-2.5 rounded-xl text-slate-300 hover:text-white transition-all shadow-md relative cursor-pointer"
-            >
-              <Bell className="h-5 w-5" />
-              {activeCalls.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[9px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-[#0d111c] animate-bounce shadow-sm">
-                  {activeCalls.length}
-                </span>
-              )}
-            </button>
-
-            {/* Dropdown Menu */}
-            {showDropdown && (
-              <div className="absolute right-0 mt-2.5 w-72 bg-[#0d111c] border border-slate-800 rounded-2xl shadow-2xl z-50 p-4 space-y-3 animate-in fade-in-50 slide-in-from-top-3 duration-150">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Waiter Calls</h4>
-                  {activeCalls.length > 0 && (
-                    <button
-                      onClick={() => setActiveCalls([])}
-                      className="text-[10px] font-bold text-orange-400 hover:underline cursor-pointer"
+        {/* Mobile Drawer Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-md pt-16 flex flex-col p-6">
+            <div className="bg-[#0b0f19] rounded-2xl p-4 shadow-2xl border border-slate-800 space-y-2">
+              <nav className="space-y-1">
+                {filteredNavItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                        isActive
+                          ? "bg-orange-500/15 text-orange-400 border-l-4 border-orange-500 font-bold"
+                          : "text-slate-300 hover:text-white hover:bg-slate-800"
+                      }`}
                     >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {activeCalls.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-4 text-center">No active service calls.</p>
-                  ) : (
-                    activeCalls.map((call) => (
-                      <div
-                        key={call.id}
-                        className="flex justify-between items-center bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs gap-3"
-                      >
-                        <div className="space-y-0.5">
-                          <p className="font-extrabold text-white">Table {call.tableNumber}</p>
-                          <p className="text-[9px] text-slate-400 font-semibold">Requested: {call.time}</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setActiveCalls((prev) => prev.filter((c) => c.id !== call.id));
-                            toast.success(`Cleared Table ${call.tableNumber} alert`);
-                          }}
-                          className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 p-1.5 rounded-lg border border-emerald-500/20 transition-colors cursor-pointer"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        {isFeatureLocked ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 max-w-lg mx-auto py-12">
-            <div className="relative mb-6 animate-pulse">
-              <div className="absolute inset-0 bg-orange-500/20 blur-xl rounded-full scale-125" />
-              <div className="relative bg-white border border-slate-200 p-6 rounded-3xl text-orange-600 shadow-xl">
-                <Lock className="h-12 w-12" />
+                      <Icon className="h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="pt-4 border-t border-slate-800">
+                <button
+                  onClick={() => nextSignOut({ callbackUrl: "/login" })}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Logout
+                </button>
               </div>
             </div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
-              Feature is Locked
-            </h2>
-            <p className="text-sm text-slate-600 leading-relaxed mb-6">
-              Your subscription plan (<span className="text-orange-600 font-semibold">{planName}</span>) does not include access to <span className="text-slate-900 font-bold">{lockedFeatureName}</span>. Please upgrade your plan to unlock this module.
-            </p>
-            <div className="w-full bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-5 mb-8 text-left space-y-3 shadow-xs">
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-orange-600" /> Why upgrade?
-              </h4>
-              <ul className="text-xs text-slate-600 space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-600 font-bold">•</span>
-                  <span>Access advanced automation & staff tools.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-600 font-bold">•</span>
-                  <span>Scale your operations with higher limits.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-600 font-bold">•</span>
-                  <span>Enable complete system synchronization.</span>
-                </li>
-              </ul>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
-              <Button
-                onClick={() => router.push("/admin/dashboard")}
-                className="bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold px-6 py-2.5 rounded-xl cursor-pointer shadow-xs"
-              >
-                Go to Dashboard
-              </Button>
-              <Button
-                onClick={() => {
-                  toast.success("Upgrade inquiry sent to Super Admin!");
-                }}
-                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md shadow-orange-500/20 cursor-pointer"
-              >
-                Upgrade Plan
-              </Button>
-            </div>
           </div>
-        ) : (
-          children
         )}
-      </main>
+
+        {/* ================= MAIN CONTENT AREA ================= */}
+        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+          {isFeatureLocked ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 max-w-lg mx-auto py-12">
+              <div className="relative mb-6 animate-pulse">
+                <div className="absolute inset-0 bg-orange-500/20 blur-xl rounded-full scale-125" />
+                <div className="relative bg-white border border-slate-200 p-6 rounded-3xl text-orange-600 shadow-xl">
+                  <Lock className="h-12 w-12" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
+                Feature is Locked
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6">
+                Your subscription plan (<span className="text-orange-600 font-semibold">{planName}</span>) does not include access to <span className="text-slate-900 font-bold">{lockedFeatureName}</span>. Please upgrade your plan to unlock this module.
+              </p>
+              <div className="w-full bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-5 mb-8 text-left space-y-3 shadow-xs">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-orange-600" /> Why upgrade?
+                </h4>
+                <ul className="text-xs text-slate-600 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-600 font-bold">•</span>
+                    <span>Access advanced automation & staff tools.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-600 font-bold">•</span>
+                    <span>Scale your operations with higher limits.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-600 font-bold">•</span>
+                    <span>Enable complete system synchronization.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+                <Button
+                  onClick={() => router.push("/admin/dashboard")}
+                  className="bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold px-6 py-2.5 rounded-xl cursor-pointer shadow-xs"
+                >
+                  Go to Dashboard
+                </Button>
+                <Button
+                  onClick={() => {
+                    toast.success("Upgrade inquiry sent to Super Admin!");
+                  }}
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md shadow-orange-500/20 cursor-pointer"
+                >
+                  Upgrade Plan
+                </Button>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
+      </div>
     </div>
   );
 }

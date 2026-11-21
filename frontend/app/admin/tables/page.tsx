@@ -553,13 +553,13 @@ export default function TablesPage() {
       {/* Header bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
             Tables & QR Scanners
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/30">
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
               {tables.length} Tables Active
             </span>
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-500 mt-1 text-sm font-medium">
             Manage restaurant seating zones, download high-definition scanner stands, and print QR codes.
           </p>
         </div>
@@ -589,19 +589,19 @@ export default function TablesPage() {
           <Button
             onClick={() => regenerateMutation.mutate()}
             disabled={regenerateMutation.isPending}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer"
+            className="bg-white hover:bg-slate-50 text-slate-700 font-semibold border border-slate-200 flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer shadow-xs"
           >
             {regenerateMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4 text-orange-400" />
+              <RefreshCw className="h-4 w-4 text-orange-500" />
             )}
             Sync QR Domain
           </Button>
 
           <Button
             onClick={() => setShowModal(true)}
-            className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-white font-semibold flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer"
+            className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-semibold flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Add Single Table
@@ -620,47 +620,47 @@ export default function TablesPage() {
             return (
               <Card
                 key={table._id}
-                className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between items-center text-center relative hover:border-slate-700/80 hover:bg-slate-900/60 transition-all duration-200 shadow-lg"
+                className="bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-col justify-between items-center text-center relative hover:border-slate-300 hover:shadow-md transition-all duration-200 shadow-xs"
               >
                 <div className="space-y-3 w-full">
                   <div className="flex justify-between items-start w-full">
                     <span
                       className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
                         table.status === "available"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : table.status === "occupied"
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                          : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
                       }`}
                     >
                       {table.status}
                     </span>
                     <button
                       onClick={() => handleDelete(table._id)}
-                      className="text-slate-500 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                      className="text-slate-400 hover:text-red-500 transition-colors p-1 cursor-pointer"
                       title="Delete Table"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-inner">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-xs">
                     <TableProperties className="h-6 w-6" />
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-black text-white">Table {table.tableNumber}</h3>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{table.seatingCapacity} Seater Capacity</p>
+                    <h3 className="text-lg font-black text-slate-900">Table {table.tableNumber}</h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{table.seatingCapacity} Seater Capacity</p>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-1 w-full pt-3 border-t border-slate-800/80">
+                <div className="mt-4 flex items-center justify-between gap-1 w-full pt-3 border-t border-slate-100">
                   {qr?.qrCodeUrl ? (
                     <>
                       <Button
                         size="sm"
                         onClick={() => setViewingTable({ number: table.tableNumber, qrUrl: qr.qrCodeUrl })}
-                        className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                        className="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
                         title="View QR Code"
                       >
                         <Eye className="h-3 w-3" />
@@ -694,7 +694,7 @@ export default function TablesPage() {
                       </Button>
                     </>
                   ) : (
-                    <span className="text-[10px] text-slate-500 py-1">QR pending</span>
+                    <span className="text-[10px] text-slate-400 py-1">QR pending</span>
                   )}
                 </div>
               </Card>
@@ -705,7 +705,7 @@ export default function TablesPage() {
 
       {/* Bulk action print & download bar */}
       {!isLoading && tables.length > 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-8 border-t border-slate-900">
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-8 border-t border-slate-200">
           <Button
             onClick={handleDownloadAll}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-transform active:scale-[0.98] cursor-pointer"

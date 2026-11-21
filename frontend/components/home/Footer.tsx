@@ -6,7 +6,7 @@ import { Heart } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-slate-200 text-slate-600 pt-16 pb-12 relative z-10">
+    <footer className="bg-[#070a12] border-t border-white/10 text-slate-400 pt-16 pb-12 relative z-10">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
         {/* Col 1: Brand info */}
         <div className="space-y-4 md:col-span-1">
@@ -16,47 +16,47 @@ export default function Footer() {
               <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
             </div>
             <div>
-              <span className="font-extrabold text-slate-900 text-lg tracking-tight block">
-                Serve<span className="text-orange-600">Desk</span>
+              <span className="font-extrabold text-white text-lg tracking-tight block">
+                Serve<span className="text-orange-500">Desk</span>
               </span>
               <span className="text-[9px] font-bold text-slate-400 block -mt-0.5">
                 Powered by Alvora Tech Solution
               </span>
             </div>
           </Link>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+          <p className="text-xs text-slate-400 font-medium leading-relaxed">
             The multi-tenant dining operating system for contactless QR ordering, real-time Kitchen KDS lines, and floor waiter management.
           </p>
         </div>
 
         {/* Col 2: Product Links */}
         <div>
-          <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-4">
+          <h4 className="font-extrabold text-white text-xs uppercase tracking-wider mb-4">
             Platform Capabilities
           </h4>
           <ul className="space-y-2.5 text-xs font-semibold">
             <li>
-              <a href="#features" className="hover:text-orange-600 transition-colors">
+              <a href="#features" className="hover:text-orange-400 transition-colors">
                 QR Table Ordering
               </a>
             </li>
             <li>
-              <a href="#features" className="hover:text-orange-600 transition-colors">
+              <a href="#features" className="hover:text-orange-400 transition-colors">
                 Kitchen KDS Line
               </a>
             </li>
             <li>
-              <a href="#features" className="hover:text-orange-600 transition-colors">
+              <a href="#features" className="hover:text-orange-400 transition-colors">
                 Waiter Service Alerts
               </a>
             </li>
             <li>
-              <a href="#features" className="hover:text-orange-600 transition-colors">
+              <a href="#features" className="hover:text-orange-400 transition-colors">
                 Multi-Branch Tenant Node
               </a>
             </li>
             <li>
-              <a href="#features" className="hover:text-orange-600 transition-colors">
+              <a href="#features" className="hover:text-orange-400 transition-colors">
                 Coupons & Discounts Engine
               </a>
             </li>
@@ -65,27 +65,27 @@ export default function Footer() {
 
         {/* Col 3: Navigation */}
         <div>
-          <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-4">
+          <h4 className="font-extrabold text-white text-xs uppercase tracking-wider mb-4">
             Navigation
           </h4>
           <ul className="space-y-2.5 text-xs font-semibold">
             <li>
-              <Link href="/login" className="hover:text-orange-600 transition-colors">
+              <Link href="/login" className="hover:text-orange-400 transition-colors">
                 Console Sign In
               </Link>
             </li>
             <li>
-              <Link href="/register" className="hover:text-orange-600 transition-colors">
+              <Link href="/register" className="hover:text-orange-400 transition-colors">
                 Request Restaurant Access
               </Link>
             </li>
             <li>
-              <a href="#pricing" className="hover:text-orange-600 transition-colors">
+              <a href="#pricing" className="hover:text-orange-400 transition-colors">
                 Subscription Plans
               </a>
             </li>
             <li>
-              <a href="#faq" className="hover:text-orange-600 transition-colors">
+              <a href="#faq" className="hover:text-orange-400 transition-colors">
                 Support & FAQ
               </a>
             </li>
@@ -94,19 +94,19 @@ export default function Footer() {
 
         {/* Col 4: Trust / Security */}
         <div>
-          <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-4">
+          <h4 className="font-extrabold text-white text-xs uppercase tracking-wider mb-4">
             System Reliability
           </h4>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed mb-3">
+          <p className="text-xs text-slate-400 font-medium leading-relaxed mb-3">
             Built with MERN Stack + Next.js 15, TanStack Query, Zustand, Socket.io, and MongoDB Atlas.
           </p>
-          <div className="inline-flex items-center gap-2 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> All Systems Operational
+          <div className="inline-flex items-center gap-2 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> All Systems Operational
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
+      <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-400">
         <p>© {new Date().getFullYear()} ServeDesk Platform · Powered by Alvora Tech Solution. All rights reserved.</p>
         <p className="flex items-center gap-1">
           Designed with <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" /> for modern hospitality.
