@@ -335,7 +335,7 @@ export default function OrdersPage() {
           <div class="divider"></div>
           <div class="footer-msg">
             <div>Thank you for dining with us!</div>
-            <div style="font-size: 10px; margin-top: 5px;">Powered by Restro SaaS</div>
+            <div style="font-size: 10px; margin-top: 5px;">Powered by ServeDesk</div>
           </div>
           <script>
             window.onload = function() {

@@ -1,4 +1,4 @@
-# Restro SaaS - Enterprise Multi-Tenant Restaurant QR Ordering System
+# ServeDesk - Enterprise Multi-Tenant Restaurant QR Ordering System
 
 An enterprise-grade, production-ready, white-label Multi-Tenant and Multi-Branch Restaurant QR Ordering SaaS platform built using **Next.js 15 (App Router)**, **Express**, **Socket.IO**, and **MongoDB**.
 
@@ -101,7 +101,7 @@ This boots:
 After database seeding (`npm run seed` inside `backend/`), the following default credentials are created:
 
 1. **Super Admin**:
-   - Email: `superadmin@restrosaas.com`
+   - Email: `superadmin@servedesk.com`
    - Password: `password123`
    - Role: `SUPER_ADMIN`
    - Access: Super Admin dashboard to manage restaurants and plans.

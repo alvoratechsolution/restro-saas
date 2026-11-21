@@ -1,7 +1,7 @@
 {
-  "name": "restro-saas-backend",
+  "name": "servedesk-backend",
   "version": "1.0.0",
-  "description": "API & WebSocket Server for Restro SaaS",
+  "description": "API & WebSocket Server for ServeDesk",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",

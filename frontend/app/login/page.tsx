@@ -157,14 +157,14 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setEmail("superadmin@restro-saas.com");
+                  setEmail("superadmin@servedesk.com");
                   setPassword("SuperAdminPassword123!");
                   toast.success("Loaded Super Admin credentials!");
                 }}
                 className="bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-300 p-2.5 rounded-xl text-left transition-all cursor-pointer group"
               >
                 <div className="text-[11px] font-black text-purple-400 group-hover:underline">👑 Super Admin</div>
-                <div className="text-[10px] text-slate-400 truncate">superadmin@restro-saas.com</div>
+                <div className="text-[10px] text-slate-400 truncate">superadmin@servedesk.com</div>
               </button>
 
               <button
@@ -176,7 +176,7 @@ export default function LoginPage() {
                 }}
                 className="bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-300 p-2.5 rounded-xl text-left transition-all cursor-pointer group"
               >
-                <div className="text-[11px] font-black text-orange-400 group-hover:underline">🏪 Restro Admin</div>
+                <div className="text-[11px] font-black text-orange-400 group-hover:underline">🏪 Restaurant Admin</div>
                 <div className="text-[10px] text-slate-400 truncate">admin@tastybites.com</div>
               </button>
 

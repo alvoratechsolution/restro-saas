@@ -153,7 +153,13 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    let user;
+    const lowerEmail = email.toLowerCase().trim();
+    if (lowerEmail === "superadmin@servedesk.com" || lowerEmail === "superadmin@restro-saas.com") {
+      user = await User.findOne({ email: { $in: ["superadmin@servedesk.com", "superadmin@restro-saas.com"] } });
+    } else {
+      user = await User.findOne({ email: lowerEmail });
+    }
     if (!user || !user.password) {
       return res.status(401).json({ error: "No user found with this email" });
     }
@@ -207,7 +213,13 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    let user;
+    const lowerEmail = email.toLowerCase().trim();
+    if (lowerEmail === "superadmin@servedesk.com" || lowerEmail === "superadmin@restro-saas.com") {
+      user = await User.findOne({ email: { $in: ["superadmin@servedesk.com", "superadmin@restro-saas.com"] } });
+    } else {
+      user = await User.findOne({ email: lowerEmail });
+    }
     if (!user) {
       return res.status(404).json({ error: "No user found with this email address" });
     }
@@ -238,7 +250,13 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ error: "Email, OTP, and new password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    let user;
+    const lowerEmail = email.toLowerCase().trim();
+    if (lowerEmail === "superadmin@servedesk.com" || lowerEmail === "superadmin@restro-saas.com") {
+      user = await User.findOne({ email: { $in: ["superadmin@servedesk.com", "superadmin@restro-saas.com"] } });
+    } else {
+      user = await User.findOne({ email: lowerEmail });
+    }
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }

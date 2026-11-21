@@ -288,7 +288,7 @@ export default function OrderTrackingPage({
                     placeholder="Write a message or suggestion (Optional)..."
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 resize-none min-h-[70px]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-base sm:text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 resize-none min-h-[70px]"
                     rows={3}
                   />
                 </div>

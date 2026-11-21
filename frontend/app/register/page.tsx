@@ -83,7 +83,7 @@ export default function RegisterPage() {
                 Request Submitted!
               </h2>
               <p className="text-xs text-slate-400">
-                Thank you for your interest in Restro SaaS.
+                Thank you for your interest in ServeDesk.
               </p>
             </div>
 

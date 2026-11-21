@@ -26,7 +26,7 @@ export default function Testimonials() {
       role: "Operations Director",
       restaurant: "Tandoori Flames (4 Locations), Delhi",
       quote:
-        "Managing multi-outlet menus and coupon offers from one dashboard is seamless. Restro SaaS has zero commissions, which saved us over ₹2.5 Lakhs in POS vendor fees this quarter.",
+        "Managing multi-outlet menus and coupon offers from one dashboard is seamless. ServeDesk has zero commissions, which saved us over ₹2.5 Lakhs in POS vendor fees this quarter.",
       rating: 5,
     },
   ];
@@ -43,7 +43,7 @@ export default function Testimonials() {
             Loved by Chefs &amp; Restaurateurs
           </h2>
           <p className="text-slate-600 text-base font-medium">
-            Here&apos;s what dining industry leaders say about switching to Restro SaaS.
+            Here&apos;s what dining industry leaders say about switching to ServeDesk.
           </p>
         </div>
 

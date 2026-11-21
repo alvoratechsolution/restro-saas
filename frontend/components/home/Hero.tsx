@@ -203,10 +203,10 @@ export default function Hero() {
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-lg bg-orange-500 flex items-center justify-center font-black text-white text-xs">
-                    R
+                    S
                   </div>
                   <div>
-                    <span className="font-extrabold text-white text-sm">Restro<span className="text-orange-500">SaaS</span></span>
+                    <span className="font-extrabold text-white text-sm">Serve<span className="text-orange-500">Desk</span></span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
@@ -251,7 +251,7 @@ export default function Hero() {
                   {/* Welcome Greeting */}
                   <div>
                     <h3 className="font-extrabold text-white text-sm">Welcome Back!</h3>
-                    <p className="text-[10px] text-slate-400">Here's what's happening at your restaurant today.</p>
+                    <p className="text-[10px] text-slate-400">Here&apos;s what&apos;s happening at your restaurant today.</p>
                   </div>
 
                   {/* 4 Stat KPI Mini Cards */}
@@ -325,8 +325,8 @@ export default function Hero() {
               className="absolute -bottom-6 -left-2 sm:-left-6 z-20 w-32 sm:w-36 bg-gradient-to-b from-[#181d2a] to-[#0a0d14] border border-amber-500/30 rounded-2xl p-2.5 shadow-2xl backdrop-blur-xl text-center space-y-2"
             >
               <div className="flex items-center justify-center gap-1">
-                <div className="h-4 w-4 rounded bg-orange-500 flex items-center justify-center text-white font-black text-[9px]">R</div>
-                <span className="font-bold text-white text-[11px]">Restro<span className="text-orange-500">SaaS</span></span>
+                <div className="h-4 w-4 rounded bg-orange-500 flex items-center justify-center text-white font-black text-[9px]">S</div>
+                <span className="font-bold text-white text-[11px]">Serve<span className="text-orange-500">Desk</span></span>
               </div>
 
               {/* QR Code graphic mockup */}
@@ -363,7 +363,7 @@ export default function Hero() {
                   <rect x="84" y="84" width="8" height="8" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="bg-orange-500 text-white font-black text-[9px] px-1 rounded shadow">R</span>
+                  <span className="bg-orange-500 text-white font-black text-[9px] px-1 rounded shadow">S</span>
                 </div>
               </div>
 

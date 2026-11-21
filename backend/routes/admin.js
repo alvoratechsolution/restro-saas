@@ -328,7 +328,14 @@ router.delete("/menu", checkFeature("menu"), async (req, res) => {
 // 4. TABLES & QR CODES
 router.get("/tables", checkFeature("qr-tables"), async (req, res) => {
   try {
-    const tables = await Table.find({ branchId: req.user.branchId }).sort({ tableNumber: 1 });
+    const rawTables = await Table.find({ branchId: req.user.branchId });
+    // Sort tables naturally (e.g. 1, 2, 3 ... 35 or T1, T2 ... T35)
+    const tables = rawTables.sort((a, b) => {
+      const numA = parseInt(String(a.tableNumber).replace(/\D/g, ""), 10) || 0;
+      const numB = parseInt(String(b.tableNumber).replace(/\D/g, ""), 10) || 0;
+      if (numA !== numB) return numA - numB;
+      return String(a.tableNumber).localeCompare(String(b.tableNumber), undefined, { numeric: true });
+    });
     const qrcodes = await QRCode.find({ branchId: req.user.branchId });
     const restaurant = await Restaurant.findById(req.user.restaurantId);
     return res.json({
@@ -339,6 +346,64 @@ router.get("/tables", checkFeature("qr-tables"), async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch tables" });
+  }
+});
+
+// Bulk create / ensure 35 tables
+router.post("/tables/bulk-create-35", checkFeature("qr-tables"), async (req, res) => {
+  try {
+    const { restaurantId, branchId } = req.user;
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) return res.status(404).json({ error: "Restaurant not found" });
+
+    const totalToEnsure = 35;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.origin || "https://restro-saas-website.vercel.app";
+    const createdTables = [];
+
+    for (let i = 1; i <= totalToEnsure; i++) {
+      const tableNumber = String(i);
+      let table = await Table.findOne({ branchId, tableNumber });
+      if (!table) {
+        // Natural seating capacity (2, 4, 6, 8 seaters)
+        const seatingCapacity = i % 5 === 0 ? 6 : i % 3 === 0 ? 4 : i % 7 === 0 ? 8 : 2;
+        table = await Table.create({
+          restaurantId,
+          branchId,
+          tableNumber,
+          seatingCapacity,
+          status: "available",
+          isActive: true
+        });
+        createdTables.push(table);
+      }
+
+      // Ensure QR Code exists
+      let qr = await QRCode.findOne({ branchId, tableId: table._id });
+      if (!qr) {
+        const qrUrl = `${appUrl}/${restaurant.slug}/table/${tableNumber}`;
+        const dataUrl = await QRCodeGenerator.toDataURL(qrUrl, {
+          width: 500,
+          margin: 2,
+          color: { dark: "#0f172a", light: "#ffffff" }
+        });
+        await QRCode.create({
+          restaurantId,
+          branchId,
+          tableId: table._id,
+          type: "table",
+          qrCodeUrl: dataUrl
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `35 tables are active! Created ${createdTables.length} new tables with QR codes.`,
+      createdCount: createdTables.length
+    });
+  } catch (error) {
+    console.error("Bulk create 35 tables error:", error);
+    return res.status(500).json({ error: "Failed to generate 35 tables" });
   }
 });
 

@@ -5,7 +5,7 @@ import CTABanner from "@/components/home/CTABanner";
 import Footer from "@/components/home/Footer";
 
 export const metadata = {
-  title: "Frequently Asked Questions (FAQ) - Restro SaaS",
+  title: "Frequently Asked Questions (FAQ) - ServeDesk",
   description:
     "Find answers to common questions about setting up QR code table ordering, kitchen display screens, waiter notifications, and zero commission pricing.",
   alternates: {

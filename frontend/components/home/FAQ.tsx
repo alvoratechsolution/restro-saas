@@ -12,8 +12,8 @@ export default function FAQ() {
       a: "No! Customers simply open their smartphone camera, scan the QR code on their table, and the digital menu opens instantly in their web browser. Zero downloads required.",
     },
     {
-      q: "Does Restro SaaS work on existing iPad/Android tablets?",
-      a: "Yes. Restro SaaS is 100% web-responsive. You can run the Kitchen KDS line and Waiter Alert console on any tablet, laptop, or desktop browser.",
+      q: "Does ServeDesk work on existing iPad/Android tablets?",
+      a: "Yes. ServeDesk is 100% web-responsive. You can run the Kitchen KDS line and Waiter Alert console on any tablet, laptop, or desktop browser.",
     },
     {
       q: "Can I manage multiple outlets with different menus?",
@@ -45,7 +45,7 @@ export default function FAQ() {
             Got Questions? We&apos;ve Got Answers.
           </h2>
           <p className="text-slate-600 text-base font-medium">
-            Everything you need to know about setting up Restro SaaS for your restaurant.
+            Everything you need to know about setting up ServeDesk for your restaurant.
           </p>
         </div>
 

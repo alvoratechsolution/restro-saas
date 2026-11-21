@@ -96,7 +96,7 @@ export default function InteractiveDemo() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
               <span>Simulated Sandbox Mode: {activeTab.toUpperCase()}</span>
             </div>
-            <span className="text-slate-500 font-mono text-[11px]">Tenant ID: RESTRO-DEMO-NODE</span>
+            <span className="text-slate-500 font-mono text-[11px]">Tenant ID: SERVEDESK-DEMO-NODE</span>
           </div>
 
           <AnimatePresence mode="wait">

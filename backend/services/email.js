@@ -17,12 +17,12 @@ async function sendOtpEmail(email, name, otp) {
   }
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || '"Restro SaaS" <noreply@restro-saas.com>',
+    from: process.env.SMTP_FROM || '"ServeDesk" <noreply@servedesk.com>',
     to: email,
-    subject: "Reset Your Password - Restro SaaS OTP Verification",
+    subject: "Reset Your Password - ServeDesk OTP Verification",
     html: `
       <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
-        <h2 style="color: #ea580c; text-align: center; font-weight: 800;">Restro SaaS OTP Verification</h2>
+        <h2 style="color: #ea580c; text-align: center; font-weight: 800;">ServeDesk OTP Verification</h2>
         <p style="color: #334155; font-size: 15px;">Hello ${name},</p>
         <p style="color: #334155; font-size: 15px;">You requested to reset your password. Use the following verification code (OTP) to proceed. This code is valid for 10 minutes.</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -32,7 +32,7 @@ async function sendOtpEmail(email, name, otp) {
         </div>
         <p style="color: #64748b; font-size: 13px;">If you did not make this request, you can safely ignore this email.</p>
         <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-        <p style="font-size: 12px; color: #94a3b8; text-align: center;">&copy; 2026 Restro SaaS Platform. All rights reserved.</p>
+        <p style="font-size: 12px; color: #94a3b8; text-align: center;">&copy; 2026 ServeDesk Platform. All rights reserved.</p>
       </div>
     `,
   };
@@ -49,14 +49,14 @@ async function sendWelcomeRegistrationEmail(email, name, restaurantName) {
   const loginUrl = (process.env.NEXTAUTH_URL || "http://localhost:3000") + "/login";
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || '"Restro SaaS" <noreply@restrosaas.com>',
+    from: process.env.SMTP_FROM || '"ServeDesk" <noreply@servedesk.com>',
     to: email,
-    subject: `🎉 Welcome to Restro SaaS - ${restaurantName} Account Activated!`,
+    subject: `🎉 Welcome to ServeDesk - ${restaurantName} Account Activated!`,
     html: `
       <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
         <div style="text-align: center; margin-bottom: 24px;">
           <div style="display: inline-block; background: linear-gradient(135deg, #ea580c, #f97316); padding: 12px 20px; border-radius: 12px; color: #ffffff; font-weight: 800; font-size: 20px;">
-            Restro SaaS
+            ServeDesk
           </div>
         </div>
         <h2 style="color: #0f172a; font-size: 22px; font-weight: 800; margin-bottom: 12px; text-align: center;">
@@ -64,7 +64,7 @@ async function sendWelcomeRegistrationEmail(email, name, restaurantName) {
         </h2>
         <p style="color: #475569; font-size: 15px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
         <p style="color: #475569; font-size: 15px; line-height: 1.6;">
-          Congratulations! Your restaurant account for <strong>${restaurantName}</strong> has been successfully registered and activated on the Restro SaaS platform.
+          Congratulations! Your restaurant account for <strong>${restaurantName}</strong> has been successfully registered and activated on the ServeDesk platform.
         </p>
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
           <h4 style="color: #0f172a; margin: 0 0 8px 0; font-size: 14px;">⚡ Account Details:</h4>
@@ -81,7 +81,7 @@ async function sendWelcomeRegistrationEmail(email, name, restaurantName) {
           </a>
         </div>
         <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-        <p style="font-size: 12px; color: #94a3b8; text-align: center;">&copy; 2026 Restro SaaS Platform. All rights reserved.</p>
+        <p style="font-size: 12px; color: #94a3b8; text-align: center;">&copy; 2026 ServeDesk Platform. All rights reserved.</p>
       </div>
     `,
   };

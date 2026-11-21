@@ -99,7 +99,7 @@ export const useCart = create<CartState>()(
       clearCart: () => set({ items: [], coupon: null }),
     }),
     {
-      name: "restro-saas-cart",
+      name: "servedesk-cart",
     }
   )
 );

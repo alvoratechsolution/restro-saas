@@ -29,11 +29,11 @@ export default function Navbar() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 via-amber-500 to-indigo-500 text-white font-black text-xl shadow-lg shadow-orange-500/25 group-hover:scale-105 transition-transform">
-            R
+            S
           </div>
           <div>
             <span className="font-extrabold text-white text-xl tracking-tight block">
-              Restro<span className="text-orange-500">SaaS</span>
+              Serve<span className="text-orange-500">Desk</span>
             </span>
             <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block -mt-1">
               Dining OS

@@ -7,7 +7,7 @@ import Footer from "@/components/home/Footer";
 export const metadata = {
   title: "Features - QR Code Ordering, KDS & Waiter Alerts",
   description:
-    "Explore Restro SaaS features: Contactless QR Table Ordering, Real-Time Kitchen Display System (KDS Screen), Waiter Assistance Alerts, and Multi-Branch Management.",
+    "Explore ServeDesk features: Contactless QR Table Ordering, Real-Time Kitchen Display System (KDS Screen), Waiter Assistance Alerts, and Multi-Branch Management.",
   alternates: {
     canonical: "/features",
   },

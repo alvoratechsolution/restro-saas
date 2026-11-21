@@ -51,7 +51,7 @@ export default function HowItWorks() {
             viewport={{ once: true }}
             className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight"
           >
-            How Restro SaaS Works
+            How ServeDesk Works
           </motion.h2>
           <p className="text-slate-600 text-base font-medium">
             Get your restaurant up and running with contactless QR dining in under 10 minutes.

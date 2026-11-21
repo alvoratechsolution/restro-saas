@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { UtensilsCrossed, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -12,10 +12,10 @@ export default function Footer() {
         <div className="space-y-4 md:col-span-1">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-black text-lg shadow-md shadow-orange-500/20">
-              R
+              S
             </div>
             <span className="font-extrabold text-slate-900 text-lg tracking-tight">
-              Restro<span className="text-orange-600">SaaS</span>
+              Serve<span className="text-orange-600">Desk</span>
             </span>
           </Link>
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
@@ -101,7 +101,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
-        <p>© {new Date().getFullYear()} Restro SaaS Platform. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} ServeDesk Platform. All rights reserved.</p>
         <p className="flex items-center gap-1">
           Designed with <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" /> for modern hospitality.
         </p>

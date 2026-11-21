@@ -1,27 +1,28 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import AuthProvider from "@/providers/AuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import ToastProvider from "@/providers/ToastProvider";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-plus-jakarta",
-});
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.com";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://restrosaas.com";
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Restro SaaS - Modern QR Code Dining & Kitchen Management System",
-    template: "%s | Restro SaaS",
+    default: "ServeDesk - Modern QR Code Dining & Kitchen Management System",
+    template: "%s | ServeDesk",
   },
   description:
     "Next Generation Multi-tenant Restaurant QR Code Ordering, Real-Time Kitchen KDS Display, Waiter Service Alerts & Live Revenue Analytics Platform.",
   keywords: [
+    "ServeDesk",
     "Restaurant SaaS",
     "QR Code Ordering System",
     "Kitchen Display System",
@@ -33,9 +34,9 @@ export const metadata: Metadata = {
     "Restaurant POS Alternative",
     "Table QR Code Generator",
   ],
-  authors: [{ name: "Restro SaaS Team", url: siteUrl }],
-  creator: "Restro SaaS",
-  publisher: "Restro SaaS Platform",
+  authors: [{ name: "ServeDesk Team", url: siteUrl }],
+  creator: "ServeDesk",
+  publisher: "ServeDesk Platform",
   category: "Technology / Restaurant Management",
   alternates: {
     canonical: "/",
@@ -44,26 +45,26 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    title: "Restro SaaS - Modern QR Code Dining & Kitchen Management System",
+    title: "ServeDesk - Modern QR Code Dining & Kitchen Management System",
     description:
       "Transform your restaurant with instant QR table ordering, real-time Kitchen KDS screens, floor waiter alerts, and multi-tenant branch analytics.",
-    siteName: "Restro SaaS",
+    siteName: "ServeDesk",
     images: [
       {
         url: "/icon.png",
         width: 1200,
         height: 630,
-        alt: "Restro SaaS Restaurant Management Platform",
+        alt: "ServeDesk Restaurant Management Platform",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Restro SaaS - Next Gen Restaurant Operating System",
+    title: "ServeDesk - Next Gen Restaurant Operating System",
     description:
       "Instant QR Code table ordering, live kitchen line KDS screens, and real-time waiter helpers.",
     images: ["/icon.png"],
-    creator: "@restrosaas",
+    creator: "@servedesk",
   },
   robots: {
     index: true,
@@ -87,7 +88,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Restro SaaS",
+    name: "ServeDesk",
     operatingSystem: "Web-based Platform",
     applicationCategory: "BusinessApplication",
     offers: {
@@ -115,7 +116,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${plusJakartaSans.variable} font-sans antialiased bg-[#f8fafc] text-slate-800 min-h-screen`}
+        className="font-sans antialiased bg-[#f8fafc] text-slate-800 min-h-screen"
       >
         <QueryProvider>
           <AuthProvider>

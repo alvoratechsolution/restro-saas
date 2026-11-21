@@ -3,7 +3,20 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
-import { Plus, Trash2, Printer, Loader2, TableProperties, Eye, X, RefreshCw, Copy, ExternalLink } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Printer,
+  Loader2,
+  TableProperties,
+  Eye,
+  X,
+  RefreshCw,
+  Copy,
+  ExternalLink,
+  Download,
+  Sparkles
+} from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -30,17 +43,30 @@ export default function TablesPage() {
   const [viewingTable, setViewingTable] = useState<{ number: string; qrUrl: string } | null>(null);
 
   // Queries
-  const { data: response, isLoading } = useQuery<{ success: boolean; tables: Table[]; qrcodes: QRCode[]; restaurant?: { name: string } }>({
+  const { data: response, isLoading } = useQuery<{
+    success: boolean;
+    tables: Table[];
+    qrcodes: QRCode[];
+    restaurant?: { name: string };
+  }>({
     queryKey: ["admin", "tables"],
     queryFn: () => apiFetch("/api/admin/tables"),
   });
 
-  const tables = response?.tables || [];
+  const rawTables = response?.tables || [];
+  // Sort naturally 1, 2, 3 ... 35 or T1, T2 ... T35
+  const tables = [...rawTables].sort((a, b) => {
+    const numA = parseInt(String(a.tableNumber).replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt(String(b.tableNumber).replace(/\D/g, ""), 10) || 0;
+    if (numA !== numB) return numA - numB;
+    return String(a.tableNumber).localeCompare(String(b.tableNumber), undefined, { numeric: true });
+  });
+
   const qrcodes = response?.qrcodes || [];
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (payload: any) =>
+    mutationFn: (payload: { tableNumber: string; seatingCapacity: number }) =>
       apiFetch("/api/admin/tables", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -50,8 +76,22 @@ export default function TablesPage() {
       queryClient.invalidateQueries({ queryKey: ["admin", "tables"] });
       resetForm();
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to create table");
+    },
+  });
+
+  const bulkCreate35Mutation = useMutation({
+    mutationFn: () =>
+      apiFetch("/api/admin/tables/bulk-create-35", {
+        method: "POST",
+      }),
+    onSuccess: (res: { message?: string }) => {
+      toast.success(res.message || "35 tables created successfully!");
+      queryClient.invalidateQueries({ queryKey: ["admin", "tables"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to generate 35 tables");
     },
   });
 
@@ -64,7 +104,7 @@ export default function TablesPage() {
       toast.success("Table deleted");
       queryClient.invalidateQueries({ queryKey: ["admin", "tables"] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to delete table");
     },
   });
@@ -74,11 +114,11 @@ export default function TablesPage() {
       apiFetch("/api/admin/tables/regenerate-qrs", {
         method: "POST",
       }),
-    onSuccess: (res: any) => {
+    onSuccess: (res: { message?: string }) => {
       toast.success(res.message || "QR Codes regenerated to live domain!");
       queryClient.invalidateQueries({ queryKey: ["admin", "tables"] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to regenerate QR codes");
     },
   });
@@ -101,6 +141,138 @@ export default function TablesPage() {
     }
   };
 
+  // Download raw QR code image directly
+  const downloadRawQR = (tNum: string, qrUrl: string) => {
+    const a = document.createElement("a");
+    a.download = `Table-${tNum}-QR-Code.png`;
+    a.href = qrUrl;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success(`Downloaded Table ${tNum} QR Code!`);
+  };
+
+  // Generate and download a high-res branded Table Stand Graphic (PNG)
+  const downloadStandImage = (restaurantName: string, tNum: string, qrUrl: string) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 1100;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 800, 1100);
+    gradient.addColorStop(0, "#0a0e17");
+    gradient.addColorStop(0.5, "#131b2c");
+    gradient.addColorStop(1, "#070a10");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 1100);
+
+    // Border Accent
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#ea580c";
+    ctx.beginPath();
+    ctx.roundRect(40, 40, 720, 1020, 36);
+    ctx.stroke();
+
+    // Inner subtle glow border
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+    ctx.beginPath();
+    ctx.roundRect(50, 50, 700, 1000, 30);
+    ctx.stroke();
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      // Header Restaurant Name
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "800 22px sans-serif";
+      ctx.letterSpacing = "4px";
+      ctx.fillText((restaurantName || "OUR RESTAURANT").toUpperCase(), 400, 115);
+
+      // Table Badge Box
+      ctx.fillStyle = "#ea580c";
+      ctx.beginPath();
+      ctx.roundRect(260, 150, 280, 68, 34);
+      ctx.fill();
+
+      // Table Number text
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 34px sans-serif";
+      ctx.fillText(`TABLE ${tNum}`, 400, 196);
+
+      // Instruction heading
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "800 32px sans-serif";
+      ctx.fillText("Scan QR Code to Order", 400, 285);
+
+      // QR Code Container Box (Crisp White Card)
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(160, 325, 480, 480, 28);
+      ctx.fill();
+
+      // Border on QR Box
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#fdba74";
+      ctx.stroke();
+
+      // Render QR Image
+      ctx.drawImage(img, 185, 350, 430, 430);
+
+      // Sub-instructions
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "600 22px sans-serif";
+      ctx.fillText("Browse Menu · Customize · Order & Pay", 400, 865);
+
+      ctx.fillStyle = "#f97316";
+      ctx.font = "bold 18px sans-serif";
+      ctx.fillText("⚡ Instant Digital Dining · No App Required", 400, 915);
+
+      // Footer branding
+      ctx.fillStyle = "#64748b";
+      ctx.font = "800 15px sans-serif";
+      ctx.letterSpacing = "2px";
+      ctx.fillText("POWERED BY SERVEDESK", 400, 990);
+
+      // Trigger instant download
+      const a = document.createElement("a");
+      a.download = `ServeDesk-Table-${tNum}-Scanner-Stand.png`;
+      a.href = canvas.toDataURL("image/png");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success(`Downloaded Table ${tNum} Scanner Stand!`);
+    };
+    img.src = qrUrl;
+  };
+
+  // Download all table scanner cards sequentially
+  const handleDownloadAll = async () => {
+    const restName = response?.restaurant?.name || "Our Restaurant";
+    const validQRs = tables
+      .map((t) => ({ table: t, qr: qrcodes.find((q) => q.tableId === t._id) }))
+      .filter((item) => item.qr?.qrCodeUrl);
+
+    if (validQRs.length === 0) {
+      toast.error("No QR codes available to download");
+      return;
+    }
+
+    toast.loading(`Downloading ${validQRs.length} table scanners...`, { id: "bulk-download" });
+
+    for (let i = 0; i < validQRs.length; i++) {
+      const { table, qr } = validQRs[i];
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      downloadStandImage(restName, table.tableNumber, qr!.qrCodeUrl);
+    }
+
+    toast.success(`All ${validQRs.length} table scanners downloaded!`, { id: "bulk-download" });
+  };
+
+  // Print single table sign
   const handlePrint = (qrUrl: string, tNum: string) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
@@ -144,7 +316,6 @@ export default function TablesPage() {
               letter-spacing: 0.15em;
               margin-bottom: 12px;
               text-transform: uppercase;
-              font-family: 'Plus Jakarta Sans', sans-serif;
             }
             .badge {
               background-color: #ea580c;
@@ -211,7 +382,7 @@ export default function TablesPage() {
               <img src="${qrUrl}" alt="Table QR" />
             </div>
             <div class="sub-instruction">Browse menu, customize items & pay directly from your phone</div>
-            <div class="footer">Powered by Restro SaaS</div>
+            <div class="footer">Powered by ServeDesk</div>
           </div>
           <script>
             window.onload = function() {
@@ -225,12 +396,13 @@ export default function TablesPage() {
     printWindow.document.close();
   };
 
+  // Print all table signs
   const handlePrintAll = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
     const restName = response?.restaurant?.name || "Our Restaurant";
-    
+
     let cardsHtml = "";
     tables.forEach((table) => {
       const qr = qrcodes.find((q) => q.tableId === table._id);
@@ -246,7 +418,7 @@ export default function TablesPage() {
                 <img src="${qr.qrCodeUrl}" alt="Table QR" />
               </div>
               <div class="sub-instruction">Browse menu, customize items & pay directly from your phone</div>
-              <div class="footer">Powered by Restro SaaS</div>
+              <div class="footer">Powered by ServeDesk</div>
             </div>
           </div>
         `;
@@ -378,26 +550,61 @@ export default function TablesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      {/* Header bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Tables & QR Codes</h1>
-          <p className="text-slate-400 mt-1">Manage restaurant seating zones and generate custom order QR templates.</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+            Tables & QR Scanners
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/30">
+              {tables.length} Tables Active
+            </span>
+          </h1>
+          <p className="text-slate-400 mt-1">
+            Manage restaurant seating zones, download high-definition scanner stands, and print QR codes.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            onClick={() => bulkCreate35Mutation.mutate()}
+            disabled={bulkCreate35Mutation.isPending}
+            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold flex items-center gap-2 text-xs shadow-lg shadow-orange-500/20 active:scale-95 transition-all cursor-pointer"
+          >
+            {bulkCreate35Mutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            ⚡ Add / Ensure 35 Tables
+          </Button>
+
+          <Button
+            onClick={handleDownloadAll}
+            disabled={tables.length === 0}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            Download All Scanners
+          </Button>
+
           <Button
             onClick={() => regenerateMutation.mutate()}
             disabled={regenerateMutation.isPending}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 flex items-center gap-2 text-xs"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer"
           >
-            {regenerateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 text-orange-400" />}
-            Sync QR Domain (Fix Localhost)
+            {regenerateMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 text-orange-400" />
+            )}
+            Sync QR Domain
           </Button>
+
           <Button
             onClick={() => setShowModal(true)}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2 shadow-lg shadow-orange-500/10 text-xs"
+            className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-white font-semibold flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            Add Table
+            Add Single Table
           </Button>
         </div>
       </div>
@@ -407,15 +614,15 @@ export default function TablesPage() {
           <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {tables.map((table) => {
             const qr = qrcodes.find((q) => q.tableId === table._id);
             return (
               <Card
                 key={table._id}
-                className="bg-slate-900/20 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between items-center text-center relative hover:border-slate-700/80 transition-all duration-200"
+                className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between items-center text-center relative hover:border-slate-700/80 hover:bg-slate-900/60 transition-all duration-200 shadow-lg"
               >
-                <div className="space-y-3.5 w-full">
+                <div className="space-y-3 w-full">
                   <div className="flex justify-between items-start w-full">
                     <span
                       className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
@@ -430,44 +637,64 @@ export default function TablesPage() {
                     </span>
                     <button
                       onClick={() => handleDelete(table._id)}
-                      className="text-slate-500 hover:text-red-500 transition-colors p-1"
+                      className="text-slate-500 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                      title="Delete Table"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-orange-500/5 text-orange-500 border border-orange-500/10">
-                    <TableProperties className="h-7 w-7" />
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-inner">
+                    <TableProperties className="h-6 w-6" />
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold text-white">Table {table.tableNumber}</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Seating capacity: {table.seatingCapacity}</p>
+                    <h3 className="text-lg font-black text-white">Table {table.tableNumber}</h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{table.seatingCapacity} Seater Capacity</p>
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-center gap-2 w-full pt-4 border-t border-slate-900">
+                <div className="mt-4 flex items-center justify-between gap-1 w-full pt-3 border-t border-slate-800/80">
                   {qr?.qrCodeUrl ? (
                     <>
                       <Button
                         size="sm"
                         onClick={() => setViewingTable({ number: table.tableNumber, qrUrl: qr.qrCodeUrl })}
-                        className="bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-300 text-xs flex-1 py-1.5 flex items-center justify-center gap-1.5"
+                        className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                        title="View QR Code"
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-3 w-3" />
                         View
                       </Button>
+
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          downloadStandImage(
+                            response?.restaurant?.name || "Our Restaurant",
+                            table.tableNumber,
+                            qr.qrCodeUrl
+                          )
+                        }
+                        className="bg-emerald-600/90 hover:bg-emerald-600 text-white text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                        title="Download Scanner Card Graphic"
+                      >
+                        <Download className="h-3 w-3" />
+                        Download
+                      </Button>
+
                       <Button
                         size="sm"
                         onClick={() => handlePrint(qr.qrCodeUrl, table.tableNumber)}
-                        className="bg-orange-600 hover:bg-orange-700 text-white text-xs flex-1 py-1.5 flex items-center justify-center gap-1.5"
+                        className="bg-orange-600 hover:bg-orange-700 text-white text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                        title="Print Table Sign"
                       >
-                        <Printer className="h-3.5 w-3.5" />
-                        Print Sign
+                        <Printer className="h-3 w-3" />
+                        Print
                       </Button>
                     </>
                   ) : (
-                    <span className="text-[10px] text-slate-500">QR generation pending</span>
+                    <span className="text-[10px] text-slate-500 py-1">QR pending</span>
                   )}
                 </div>
               </Card>
@@ -476,15 +703,23 @@ export default function TablesPage() {
         </div>
       )}
 
-      {/* Bulk action print bar */}
+      {/* Bulk action print & download bar */}
       {!isLoading && tables.length > 0 && (
-        <div className="flex justify-center pt-8 border-t border-slate-900">
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-8 border-t border-slate-900">
+          <Button
+            onClick={handleDownloadAll}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition-transform active:scale-[0.98] cursor-pointer"
+          >
+            <Download className="h-5 w-5" />
+            Download All {tables.length} Table Scanners (PNG)
+          </Button>
+
           <Button
             onClick={handlePrintAll}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-orange-500/10 flex items-center gap-2 transition-transform active:scale-[0.98]"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-orange-500/20 flex items-center gap-2 transition-transform active:scale-[0.98] cursor-pointer"
           >
             <Printer className="h-5 w-5" />
-            Print All Table Signs (${tables.length} Tables)
+            Print All Table Signs ({tables.length} Tables / PDF)
           </Button>
         </div>
       )}
@@ -493,15 +728,18 @@ export default function TablesPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-            <div className="p-6 border-b border-slate-850">
+            <div className="p-6 border-b border-slate-850 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Add Dining Table</h2>
+              <button onClick={resetForm} className="text-slate-400 hover:text-white cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <Input
                 label="Table Number / Label *"
                 type="text"
-                placeholder="T-12 or 12"
+                placeholder="e.g. 1, 2, 35 or T-1"
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
                 required
@@ -521,14 +759,14 @@ export default function TablesPage() {
                 <Button
                   type="button"
                   onClick={resetForm}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2 cursor-pointer"
                 >
                   {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Save Table
@@ -542,36 +780,35 @@ export default function TablesPage() {
       {/* View QR Code Modal overlay */}
       {viewingTable && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-850/85 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6 relative animate-in fade-in-50 zoom-in-95 duration-150 text-center space-y-5">
+          <div className="bg-slate-900 border border-slate-850/85 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6 relative animate-in fade-in-50 zoom-in-95 duration-150 text-center space-y-4">
             <div className="absolute top-4 right-4">
               <button
                 onClick={() => setViewingTable(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
-            <div className="pt-2 text-center space-y-4">
+
+            <div className="pt-2 text-center space-y-3">
               <div>
                 <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
                   {response?.restaurant?.name || "Our Restaurant"}
                 </p>
-                <h3 className="text-2xl font-black text-white mt-1">TABLE {viewingTable.number}</h3>
+                <h3 className="text-2xl font-black text-white mt-0.5">TABLE {viewingTable.number}</h3>
               </div>
-              
-              <div className="bg-white p-4 rounded-2xl inline-block shadow-md">
+
+              <div className="bg-white p-3 rounded-2xl inline-block shadow-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={viewingTable.qrUrl} alt="Preview QR" className="h-56 w-56 mx-auto" />
+                <img src={viewingTable.qrUrl} alt="Preview QR" className="h-52 w-52 mx-auto" />
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm font-bold text-slate-200">Scan QR to Order</p>
-                <p className="text-xs text-slate-400 max-w-[240px] mx-auto leading-relaxed">
-                  Browse the menu, select your dishes and place orders directly from your phone.
+                <p className="text-xs text-slate-400 max-w-[260px] mx-auto leading-relaxed">
+                  Guests scan this QR to view the menu, select items & pay directly from their phone.
                 </p>
-                
-                <div className="pt-2 flex items-center justify-center gap-2">
+
+                <div className="flex items-center justify-center gap-2">
                   <a
                     href={`/tasty-bites/table/${viewingTable.number}`}
                     target="_blank"
@@ -595,20 +832,47 @@ export default function TablesPage() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <Button
-                onClick={() => handlePrint(viewingTable.qrUrl, viewingTable.number)}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-orange-500/10"
-              >
-                <Printer className="h-4 w-4" />
-                Print Sign
-              </Button>
-              <Button
-                onClick={() => setViewingTable(null)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
-              >
-                Close
-              </Button>
+            {/* Action buttons in Modal */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() =>
+                    downloadStandImage(
+                      response?.restaurant?.name || "Our Restaurant",
+                      viewingTable.number,
+                      viewingTable.qrUrl
+                    )
+                  }
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2 cursor-pointer shadow-md"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Stand Graphic
+                </Button>
+
+                <Button
+                  onClick={() => downloadRawQR(viewingTable.number, viewingTable.qrUrl)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center justify-center gap-1.5 py-2 border border-slate-700 cursor-pointer"
+                >
+                  <Download className="h-3.5 w-3.5 text-orange-400" />
+                  Raw QR (.png)
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handlePrint(viewingTable.qrUrl, viewingTable.number)}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2 cursor-pointer shadow-md"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  Print Sign
+                </Button>
+                <Button
+                  onClick={() => setViewingTable(null)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 cursor-pointer"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
         </div>

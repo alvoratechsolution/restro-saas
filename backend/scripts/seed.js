@@ -51,7 +51,7 @@ async function seed() {
       price: 0,
       billingCycle: "monthly",
       maxBranches: 1,
-      maxTablesPerBranch: 10,
+      maxTablesPerBranch: 50,
       maxMenuItems: 50,
       features: ["menu", "orders", "qr-tables", "gst-billing"],
       isActive: true,
@@ -92,7 +92,7 @@ async function seed() {
     const superAdminPassword = await bcrypt.hash("SuperAdminPassword123!", 10);
     const superAdmin = {
       name: "System Super Admin",
-      email: "superadmin@restro-saas.com",
+      email: "superadmin@servedesk.com",
       password: superAdminPassword,
       role: "SUPER_ADMIN",
       isActive: true,
@@ -546,87 +546,52 @@ async function seed() {
     ]);
     console.log("Seeded 10 Menu Items (1 per category).");
 
-    // 10. Seed Tables & QRs
+    // 10. Seed 35 Tables & High-Res QR Codes
     const qrcodeLib = require("qrcode");
     const tablesCollection = mongoose.connection.collection("tables");
     const qrcodesCollection = mongoose.connection.collection("qrcodes");
 
-    const t1Id = new mongoose.Types.ObjectId();
-    const t2Id = new mongoose.Types.ObjectId();
-    const t3Id = new mongoose.Types.ObjectId();
-
-    await tablesCollection.insertMany([
-      {
-        _id: t1Id,
-        restaurantId: tastyBites._id,
-        branchId: mainBranch._id,
-        tableNumber: "T1",
-        seatingCapacity: 2,
-        status: "available",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        _id: t2Id,
-        restaurantId: tastyBites._id,
-        branchId: mainBranch._id,
-        tableNumber: "T2",
-        seatingCapacity: 4,
-        status: "available",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        _id: t3Id,
-        restaurantId: tastyBites._id,
-        branchId: mainBranch._id,
-        tableNumber: "T3",
-        seatingCapacity: 6,
-        status: "available",
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ]);
-
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://restro-saas-website.vercel.app";
+    const tablesList = [];
+    const qrcodesList = [];
 
-    const qr1 = await qrcodeLib.toDataURL(`${appUrl}/tasty-bites/table/T1`, { width: 500, margin: 2 });
-    const qr2 = await qrcodeLib.toDataURL(`${appUrl}/tasty-bites/table/T2`, { width: 500, margin: 2 });
-    const qr3 = await qrcodeLib.toDataURL(`${appUrl}/tasty-bites/table/T3`, { width: 500, margin: 2 });
+    for (let i = 1; i <= 35; i++) {
+      const tableId = new mongoose.Types.ObjectId();
+      const tNum = String(i);
+      const capacity = i % 5 === 0 ? 6 : i % 3 === 0 ? 4 : i % 7 === 0 ? 8 : 2;
 
-    await qrcodesCollection.insertMany([
-      {
+      tablesList.push({
+        _id: tableId,
         restaurantId: tastyBites._id,
         branchId: mainBranch._id,
-        tableId: t1Id,
-        type: "table",
-        qrCodeUrl: qr1,
+        tableNumber: tNum,
+        seatingCapacity: capacity,
+        status: "available",
+        isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
-      },
-      {
+      });
+
+      const qr = await qrcodeLib.toDataURL(`${appUrl}/tasty-bites/table/${tNum}`, {
+        width: 500,
+        margin: 2,
+        color: { dark: "#0f172a", light: "#ffffff" }
+      });
+
+      qrcodesList.push({
         restaurantId: tastyBites._id,
         branchId: mainBranch._id,
-        tableId: t2Id,
+        tableId: tableId,
         type: "table",
-        qrCodeUrl: qr2,
+        qrCodeUrl: qr,
         createdAt: new Date(),
         updatedAt: new Date()
-      },
-      {
-        restaurantId: tastyBites._id,
-        branchId: mainBranch._id,
-        tableId: t3Id,
-        type: "table",
-        qrCodeUrl: qr3,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ]);
-    console.log("Seeded Branch Tables.");
+      });
+    }
+
+    await tablesCollection.insertMany(tablesList);
+    await qrcodesCollection.insertMany(qrcodesList);
+    console.log("Seeded 35 Branch Tables & QR Codes.");
 
     console.log("Database seeded successfully!");
   } catch (error) {

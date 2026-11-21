@@ -73,7 +73,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
           </div>
           <div>
             <h1 className="font-extrabold text-white text-lg tracking-tight">Super Panel</h1>
-            <p className="text-xs text-orange-500/80 font-medium uppercase tracking-wider">Restro SaaS</p>
+            <p className="text-xs text-orange-500/80 font-medium uppercase tracking-wider">ServeDesk</p>
           </div>
         </div>
 

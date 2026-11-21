@@ -8,7 +8,7 @@ import Footer from "@/components/home/Footer";
 export const metadata = {
   title: "Pricing Plans - Flexible Subscriptions for Restaurants",
   description:
-    "Transparent pricing for Restro SaaS. Starter, Professional, and Enterprise plans with 0% POS commissions and instant 14-day trial.",
+    "Transparent pricing for ServeDesk. Starter, Professional, and Enterprise plans with 0% POS commissions and instant 14-day trial.",
   alternates: {
     canonical: "/pricing",
   },

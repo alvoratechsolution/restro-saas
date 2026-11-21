@@ -97,7 +97,7 @@ const PORT = process.env.PORT || 5000;
 async function startServer() {
   await dbConnect();
   server.listen(PORT, () => {
-    console.log(`Restro SaaS API Server running on port ${PORT}`);
+    console.log(`ServeDesk API Server running on port ${PORT}`);
   });
 }
 
