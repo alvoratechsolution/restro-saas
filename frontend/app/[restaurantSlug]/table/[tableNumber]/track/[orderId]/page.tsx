@@ -16,6 +16,9 @@ import {
   HelpCircle,
   Star,
   Sparkles,
+  Plus,
+  User,
+  Phone,
 } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
@@ -166,21 +169,21 @@ export default function OrderTrackingPage({
       {/* Top Header */}
       <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 p-4 sticky top-0 z-30 flex items-center justify-between shadow-xs">
         <Link
-          href={`/${restaurantSlug}/table/${tableNumber}`}
-          className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-600 hover:text-slate-900 transition-colors"
+          href={`/${restaurantSlug}/table/${tableNumber}?addMore=1`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-xs font-black shadow-xs transition-all active:scale-95"
         >
-          <ArrowLeft className="h-4 w-4 text-orange-600" />
+          <Plus className="h-4 w-4 text-orange-600" />
           Add More Dishes
         </Link>
-        <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider">
+        <span className="text-xs text-slate-700 font-extrabold uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
           Table {tableNumber} Tracker
         </span>
       </header>
 
       {/* Main Track container */}
-      <main className="max-w-xl mx-auto w-full px-4 mt-6 space-y-6 flex-1 z-10">
+      <main className="max-w-xl mx-auto w-full px-4 mt-5 space-y-5 flex-1 z-10">
         {/* Banner */}
-        <div className="text-center space-y-2 py-3">
+        <div className="text-center space-y-2 py-2">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-extrabold text-2xl shadow-lg shadow-orange-500/20">
             {order.status === "Completed" ? "😋" : "🍳"}
           </div>
@@ -191,6 +194,25 @@ export default function OrderTrackingPage({
               {order.status === "Completed" ? "Order Served!" : "Tracking Order Status..."}
             </h2>
           )}
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 font-semibold">
+            <span className="bg-orange-50 border border-orange-200 text-orange-700 px-2.5 py-0.5 rounded-full font-black">
+              Table {tableNumber}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1">
+              <User className="h-3.5 w-3.5 text-slate-400" />
+              <strong className="text-slate-900">{order.customerName || "Dine-in Guest"}</strong>
+            </span>
+            {order.customerPhone && (
+              <>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1 text-slate-500">
+                  <Phone className="h-3 w-3 text-slate-400" />
+                  {order.customerPhone}
+                </span>
+              </>
+            )}
+          </div>
           <p className="text-xs text-slate-500 font-semibold">
             Ticket ID: #{order._id.slice(-6).toUpperCase()} • Payment Status: <span className="text-slate-900 font-extrabold">{order.paymentStatus}</span>
           </p>
@@ -412,6 +434,41 @@ export default function OrderTrackingPage({
             </div>
           </div>
         </Card>
+
+        {/* Add More Items to Table Bill */}
+        {order.status !== "Completed" && order.status !== "Cancelled" && (
+          <div className="bg-white border border-dashed border-orange-300 rounded-[24px] p-4 text-center space-y-2.5 shadow-xs">
+            <div className="space-y-0.5">
+              <p className="text-xs font-black text-slate-800">
+                Want to order more starters, drinks or desserts?
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Newly added dishes will be merged into this running table bill.
+              </p>
+            </div>
+            <Link
+              href={`/${restaurantSlug}/table/${tableNumber}?addMore=1`}
+              className="inline-flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-black shadow-md shadow-orange-500/15 transition-all active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" />
+              Add More Dishes to Table {tableNumber} Bill
+            </Link>
+          </div>
+        )}
+
+        {/* Branding Footer */}
+        <div className="pt-3 pb-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-200/90 rounded-full shadow-xs">
+            <Sparkles className="h-3 w-3 text-orange-500 shrink-0" />
+            <span className="text-[11px] font-black tracking-wide text-slate-800 uppercase">
+              ServeDesk
+            </span>
+            <span className="text-[10px] text-slate-300 font-bold">•</span>
+            <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+              Powered by Alvora Tech Solution
+            </span>
+          </div>
+        </div>
       </main>
     </div>
   );

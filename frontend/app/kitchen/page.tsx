@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
 import apiFetch from "@/lib/api";
 import useSocket from "@/hooks/useSocket";
-import { Loader2, Flame, LogOut, CheckCircle, Clock } from "lucide-react";
+import { Loader2, Flame, LogOut, CheckCircle, Clock, User } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import toast from "react-hot-toast";
@@ -27,6 +27,8 @@ interface Table {
 interface Order {
   _id: string;
   tableId?: Table;
+  customerName?: string;
+  customerPhone?: string;
   items: OrderItem[];
   status: "Pending" | "Preparing" | "Ready" | "Completed" | "Cancelled";
   createdAt: string;
@@ -193,15 +195,22 @@ export default function KitchenPage() {
                   }`}
                 >
                   {/* Ticket Header */}
-                  <div className="p-4 bg-slate-950/40 border-b border-slate-900 flex justify-between items-center">
+                  <div className="p-4 bg-slate-950/40 border-b border-slate-900 flex justify-between items-start gap-2">
                     <div>
-                      <h3 className="text-xl font-bold text-white">Table {order.tableId?.tableNumber || "N/A"}</h3>
-                      <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-white">Table {order.tableId?.tableNumber || "N/A"}</h3>
+                        <span className="text-[11px] font-bold text-rose-300 flex items-center gap-1 bg-slate-900 border border-rose-500/30 px-2 py-0.5 rounded-lg">
+                          <User className="h-3 w-3 text-rose-400 shrink-0" />
+                          <span className="truncate max-w-[120px]">{order.customerName || "Dine-in Guest"}</span>
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
                         Ticket: #{order._id.slice(-5).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString()}
+                        {order.customerPhone && <span className="text-slate-300"> • {order.customerPhone}</span>}
                       </p>
                     </div>
                     <span
-                      className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${
                         order.status === "Pending"
                           ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
                           : "bg-amber-500/10 text-amber-400 border-amber-500/20"

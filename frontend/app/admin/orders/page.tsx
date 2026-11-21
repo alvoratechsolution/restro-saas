@@ -16,6 +16,8 @@ import {
   Loader2,
   DollarSign,
   Printer,
+  User,
+  Phone,
 } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
@@ -38,6 +40,8 @@ interface Table {
 interface Order {
   _id: string;
   tableId?: Table;
+  customerName?: string;
+  customerPhone?: string;
   items: OrderItem[];
   subtotal: number;
   cgst: number;
@@ -299,6 +303,7 @@ export default function OrdersPage() {
           <div class="order-meta">
             <div><strong>ORDER ID:</strong> #${order._id.slice(-6).toUpperCase()}</div>
             <div><strong>TABLE:</strong> Table ${order.tableId?.tableNumber || "N/A"}</div>
+            <div><strong>GUEST:</strong> ${order.customerName || "Walk-in Guest"} ${order.customerPhone ? "(" + order.customerPhone + ")" : ""}</div>
             <div><strong>DATE:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div>
             <div><strong>TIME:</strong> ${new Date(order.createdAt).toLocaleTimeString()}</div>
           </div>
@@ -410,17 +415,34 @@ export default function OrdersPage() {
                 }`}
               >
                 {/* Header info */}
-                <div className="p-4 border-b border-slate-100 bg-slate-50/70 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-base font-black text-slate-900">
-                      Table {order.tableId?.tableNumber || "T-N/A"}
-                    </h3>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                      ID: #{order._id.slice(-6).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString()}
-                    </p>
+                <div className="p-4 border-b border-slate-100 bg-slate-50/70 flex justify-between items-start gap-2">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-black text-slate-900">
+                        Table {order.tableId?.tableNumber || "T-N/A"}
+                      </h3>
+                      <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                        <User className="h-3 w-3 text-orange-500 shrink-0" />
+                        <span className="truncate max-w-[110px]">{order.customerName || "Guest"}</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
+                      <span>ID: #{order._id.slice(-6).toUpperCase()}</span>
+                      <span>•</span>
+                      <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+                      {order.customerPhone && (
+                        <>
+                          <span>•</span>
+                          <span className="text-slate-700 font-bold flex items-center gap-0.5">
+                            <Phone className="h-2.5 w-2.5 text-slate-400" />
+                            {order.customerPhone}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <span
-                    className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                    className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${
                       order.status === "Pending"
                         ? "bg-orange-50 text-orange-700 border-orange-200"
                         : order.status === "Preparing"

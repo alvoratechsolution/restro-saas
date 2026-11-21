@@ -31,6 +31,8 @@ interface CartState {
     discountValue: number;
     minOrderValue: number;
   } | null;
+  activeOrderId: string | null;
+  setActiveOrderId: (orderId: string | null) => void;
   setSession: (slug: string, table: string) => void;
   setCustomerDetails: (name: string, phone: string, isVerified: boolean) => void;
   addItem: (item: Omit<CartItem, "id">) => void;
@@ -50,6 +52,8 @@ export const useCart = create<CartState>()(
       customerPhone: null,
       isVerified: false,
       coupon: null,
+      activeOrderId: null,
+      setActiveOrderId: (orderId) => set({ activeOrderId: orderId }),
       setSession: (slug, table) => {
         const currentSlug = get().restaurantSlug;
         const currentTable = get().tableNumber;
@@ -62,6 +66,7 @@ export const useCart = create<CartState>()(
             isVerified: false,
             items: [],
             coupon: null,
+            activeOrderId: null,
           });
         } else {
           set({ restaurantSlug: slug, tableNumber: table });

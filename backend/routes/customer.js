@@ -119,10 +119,19 @@ router.post("/coupons/validate", async (req, res) => {
   }
 });
 
-// 3. PLACE ORDER
+// 3. PLACE OR APPEND ORDER (CONSOLIDATED TABLE BILLING)
 router.post("/orders", async (req, res) => {
   try {
-    const { restaurantId, tableNumber, customerName, customerPhone, items, couponCode, paymentMethod } = req.body;
+    const {
+      restaurantId,
+      tableNumber,
+      customerName,
+      customerPhone,
+      items,
+      couponCode,
+      paymentMethod,
+      existingOrderId,
+    } = req.body;
 
     if (!restaurantId || !tableNumber || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: "Missing order parameters" });
@@ -169,12 +178,139 @@ router.post("/orders", async (req, res) => {
     const settings = await Settings.findOne({ branchId });
     const cgstRate = hasGstBilling ? (settings?.cgstRate || 0) : 0;
     const sgstRate = hasGstBilling ? (settings?.sgstRate || 0) : 0;
-    const serviceChargeRate = settings?.serviceChargeRate || 0;
 
+    // CHECK IF WE SHOULD CONSOLIDATE INTO AN EXISTING ACTIVE TABLE ORDER
+    let existingOrder = null;
+    if (existingOrderId) {
+      existingOrder = await Order.findOne({
+        _id: existingOrderId,
+        restaurantId,
+        status: { $nin: ["Completed", "Cancelled"] },
+        paymentStatus: { $ne: "Paid" }
+      });
+    }
+    if (!existingOrder) {
+      existingOrder = await Order.findOne({
+        tableId: table._id,
+        restaurantId,
+        status: { $in: ["Pending", "Accepted", "Preparing", "Ready"] },
+        paymentStatus: { $ne: "Paid" }
+      }).sort({ createdAt: -1 });
+    }
+
+    if (existingOrder) {
+      // APPEND ITEMS TO EXISTING ACTIVE ORDER (SINGLE CONSOLIDATED TABLE BILL)
+      let addedSubtotal = 0;
+      for (const item of items) {
+        addedSubtotal += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      }
+
+      const newOrderItemIds = [];
+      for (const item of items) {
+        let normalizedVariant = undefined;
+        if (typeof item.selectedVariant === "string") {
+          normalizedVariant = { name: item.selectedVariant, price: 0 };
+        } else if (item.selectedVariant && typeof item.selectedVariant === "object") {
+          normalizedVariant = {
+            name: item.selectedVariant.name || "Default",
+            price: Number(item.selectedVariant.price) || 0
+          };
+        }
+
+        let normalizedAddons = [];
+        if (Array.isArray(item.selectedAddons)) {
+          normalizedAddons = item.selectedAddons.map(a => {
+            if (typeof a === "string") return { name: a, price: 0 };
+            return {
+              name: a.name || "Addon",
+              price: Number(a.price) || 0
+            };
+          });
+        }
+
+        const mId = item.menuItemId || item.id || item._id;
+
+        const doc = await OrderItem.create({
+          orderId: existingOrder._id,
+          menuItemId: mId,
+          name: item.name,
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity) || 1,
+          selectedVariant: normalizedVariant,
+          selectedAddons: normalizedAddons,
+          specialInstructions: item.specialInstructions || "",
+          status: "Pending",
+        });
+        newOrderItemIds.push(doc._id);
+      }
+
+      existingOrder.items.push(...newOrderItemIds);
+      existingOrder.subtotal = Math.round((existingOrder.subtotal || 0) + addedSubtotal);
+
+      const taxableAmount = Math.max(0, existingOrder.subtotal - (existingOrder.discount || 0));
+      existingOrder.cgst = hasGstBilling ? Math.round((taxableAmount * cgstRate) / 100) : 0;
+      existingOrder.sgst = hasGstBilling ? Math.round((taxableAmount * sgstRate) / 100) : 0;
+      existingOrder.total = Math.round(taxableAmount + existingOrder.cgst + existingOrder.sgst);
+
+      if (customerName && (!existingOrder.customerName || existingOrder.customerName === "Guest")) {
+        existingOrder.customerName = customerName;
+      }
+      if (customerPhone && !existingOrder.customerPhone) {
+        existingOrder.customerPhone = customerPhone;
+      }
+
+      // If order was marked ready, revert to preparing since new dishes are cooking
+      if (existingOrder.status === "Ready" || existingOrder.status === "Accepted") {
+        existingOrder.status = "Preparing";
+      }
+
+      await existingOrder.save();
+      table.status = "occupied";
+      await table.save();
+
+      await Notification.create({
+        restaurantId,
+        branchId,
+        title: "Dishes Added to Order",
+        message: `Table ${cleanTableNumber} added ${items.length} new items to their bill (Consolidated Total: ₹${existingOrder.total})`,
+        type: "new_order",
+      });
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(branchId.toString()).emit("order-received", {
+          orderId: existingOrder._id,
+          branchId: branchId.toString(),
+          tableNumber: cleanTableNumber,
+          isAddition: true,
+        });
+        io.to(branchId.toString()).emit("order-status-updated", {
+          branchId: branchId.toString(),
+          orderId: existingOrder._id,
+          status: existingOrder.status,
+        });
+        io.to(existingOrder._id.toString()).emit("status-changed", {
+          orderId: existingOrder._id,
+          status: existingOrder.status,
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Dishes added to your table bill successfully!",
+        orderId: existingOrder._id,
+        total: existingOrder.total,
+        branchId: branchId.toString(),
+        isAppended: true,
+      });
+    }
+
+    // FRESH NEW ORDER
     let subtotal = 0;
     for (const item of items) {
-      subtotal += item.price * item.quantity;
+      subtotal += (Number(item.price) || 0) * (Number(item.quantity) || 1);
     }
+    subtotal = Math.round(subtotal);
 
     let discount = 0;
     if (couponCode) {
@@ -195,22 +331,21 @@ router.post("/orders", async (req, res) => {
     const taxableAmount = Math.max(0, subtotal - discount);
     const cgst = hasGstBilling ? Math.round((taxableAmount * cgstRate) / 100) : 0;
     const sgst = hasGstBilling ? Math.round((taxableAmount * sgstRate) / 100) : 0;
-    const serviceCharge = 0; // Removed Service Charge for now
-    const total = Math.round(taxableAmount + cgst + sgst + serviceCharge);
+    const total = Math.round(taxableAmount + cgst + sgst);
 
     const order = new Order({
       restaurantId,
       branchId,
       tableId: table._id,
-      customerName,
-      customerPhone,
+      customerName: customerName || "Guest",
+      customerPhone: customerPhone || "",
       type: "dine-in",
       status: "Pending",
       subtotal,
       cgst,
       sgst,
       igst: 0,
-      serviceCharge,
+      serviceCharge: 0,
       deliveryCharge: 0,
       discount,
       total,
@@ -271,9 +406,19 @@ router.post("/orders", async (req, res) => {
       restaurantId,
       branchId,
       title: "New Order Placed",
-      message: `Table ${tableNumber} has placed a new order for ${items.length} items (Total: ₹${total.toFixed(2)})`,
+      message: `Table ${cleanTableNumber} placed a new order for ${items.length} items (Total: ₹${total})`,
       type: "new_order",
     });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(branchId.toString()).emit("order-received", {
+        orderId: savedOrder._id,
+        branchId: branchId.toString(),
+        tableNumber: cleanTableNumber,
+        isAddition: false,
+      });
+    }
 
     return res.json({
       success: true,
@@ -375,6 +520,72 @@ router.post("/feedback", async (req, res) => {
   } catch (error) {
     console.error("Feedback submission error:", error);
     return res.status(500).json({ error: "Failed to submit feedback" });
+  }
+});
+
+// 7. GET ACTIVE ORDER FOR TABLE (CONSOLIDATED BILLING)
+router.get("/active-order", async (req, res) => {
+  try {
+    const { slug, tableNumber } = req.query;
+    if (!slug || !tableNumber) return res.status(400).json({ error: "Missing parameters" });
+
+    const restaurant = await Restaurant.findOne({ slug });
+    if (!restaurant) return res.status(404).json({ error: "Restaurant not found" });
+
+    const cleanTableNumber = decodeURIComponent(tableNumber).trim();
+    const table = await Table.findOne({
+      restaurantId: restaurant._id,
+      tableNumber: { $regex: new RegExp(`^${cleanTableNumber.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, "i") }
+    });
+    if (!table) return res.json({ success: true, activeOrder: null });
+
+    const activeOrder = await Order.findOne({
+      restaurantId: restaurant._id,
+      tableId: table._id,
+      status: { $in: ["Pending", "Accepted", "Preparing", "Ready"] },
+      paymentStatus: { $ne: "Paid" }
+    })
+      .sort({ createdAt: -1 })
+      .populate({ path: "items", populate: { path: "menuItemId" } });
+
+    return res.json({ success: true, activeOrder });
+  } catch (error) {
+    console.error("Get active order error:", error);
+    return res.status(500).json({ error: "Failed to get active order" });
+  }
+});
+
+// 8. CALL WAITER / STAFF ASSISTANCE
+router.post("/call-waiter", async (req, res) => {
+  try {
+    const { restaurantId, branchId, tableNumber, reason, customerName } = req.body;
+    if (!restaurantId || !tableNumber) {
+      return res.status(400).json({ error: "Missing required details" });
+    }
+    const cleanTable = decodeURIComponent(tableNumber).trim();
+
+    await Notification.create({
+      restaurantId,
+      branchId,
+      title: "🛎️ Waiter Assistance Requested",
+      message: `Table ${cleanTable} (${customerName || "Guest"}) requested assistance: ${reason || "General Assistance"}`,
+      type: "waiter_call",
+    });
+
+    const io = req.app.get("io");
+    if (io && branchId) {
+      io.to(branchId.toString()).emit("waiter-called", {
+        tableNumber: cleanTable,
+        customerName: customerName || "Guest",
+        reason: reason || "General Assistance",
+        time: new Date().toLocaleTimeString(),
+      });
+    }
+
+    return res.json({ success: true, message: `Waiter alerted for Table ${cleanTable}!` });
+  } catch (error) {
+    console.error("Call waiter error:", error);
+    return res.status(500).json({ error: "Failed to call waiter" });
   }
 });
 

@@ -117,6 +117,8 @@ export default function TableOrderingPage({
     customerPhone: verifiedPhone,
     isVerified,
     setCustomerDetails,
+    activeOrderId,
+    setActiveOrderId,
   } = useCart();
 
   // Selected Category
@@ -144,6 +146,10 @@ export default function TableOrderingPage({
   // Show Cart Drawer
   const [cartOpen, setCartOpen] = useState(false);
 
+  // Waiter modal states
+  const [waiterModalOpen, setWaiterModalOpen] = useState(false);
+  const [callingWaiter, setCallingWaiter] = useState(false);
+
   // Coupon state
   const [couponCodeText, setCouponCodeText] = useState("");
   const [couponValidationLoading, setCouponValidationLoading] = useState(false);
@@ -156,6 +162,21 @@ export default function TableOrderingPage({
     queryKey: ["customer", "menu", restaurantSlug],
     queryFn: () => apiFetch(`/api/customer/menu?slug=${restaurantSlug}&tableNumber=${tableNumber}`),
   });
+
+  // Query active order for this table (consolidated billing)
+  const { data: activeOrderData } = useQuery<{ success: boolean; activeOrder: any }>({
+    queryKey: ["customer", "active-order", restaurantSlug, tableNumber],
+    queryFn: () => apiFetch(`/api/customer/active-order?slug=${restaurantSlug}&tableNumber=${tableNumber}`),
+    refetchInterval: 12000,
+  });
+
+  const activeTableOrder = activeOrderData?.activeOrder;
+
+  useEffect(() => {
+    if (activeTableOrder?._id) {
+      setActiveOrderId(activeTableOrder._id);
+    }
+  }, [activeTableOrder, setActiveOrderId]);
 
   const restaurant = menuResponse?.restaurant;
   const menuItems = menuResponse?.menuItems || [];
@@ -209,16 +230,11 @@ export default function TableOrderingPage({
     e.preventDefault();
     setValidationError("");
 
-    const trimmedName = tempName.trim();
+    const trimmedName = tempName.trim() || "Guest";
     const cleanPhone = tempPhone.replace(/\D/g, "");
 
-    if (!trimmedName) {
-      setValidationError("Please enter your name");
-      return;
-    }
-
-    if (cleanPhone.length !== 10) {
-      setValidationError("Please enter a valid 10-digit mobile number");
+    if (tempPhone.trim() && cleanPhone.length !== 10) {
+      setValidationError("Please enter a valid 10-digit mobile number or leave blank");
       return;
     }
 
@@ -246,7 +262,7 @@ export default function TableOrderingPage({
           style={{ backgroundColor: "#f59e0b" }}
         />
 
-        <div className="w-full max-w-sm z-10 space-y-6 my-auto">
+        <div className="w-full max-w-sm z-10 space-y-5 my-auto">
           {/* Restaurant Branding */}
           <div className="text-center space-y-2">
             <div
@@ -263,13 +279,18 @@ export default function TableOrderingPage({
               TABLE {tableNumber}
             </div>
             <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed pt-1">
-              Enter your details to view our menu and order directly from your mobile.
+              Contactless dining & instant ordering directly from your table.
             </p>
           </div>
 
           {/* Clean Light Form Card */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl shadow-slate-200/50 space-y-5">
-            <form onSubmit={handleWelcomeSubmit} className="space-y-4">
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl shadow-slate-200/40 space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-slate-900">Guest Details</h3>
+              <p className="text-[11px] text-slate-500">Enter your name for your table orders</p>
+            </div>
+
+            <form onSubmit={handleWelcomeSubmit} className="space-y-3.5">
               {validationError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-3 rounded-xl text-center">
                   {validationError}
@@ -280,26 +301,28 @@ export default function TableOrderingPage({
               <div className="space-y-1.5 text-left">
                 <label className="text-xs font-bold text-slate-700">Your Name *</label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="Enter your name"
+                    placeholder="e.g. Rahul Sharma"
                     value={tempName}
                     onChange={(e) => {
                       setTempName(e.target.value);
                       if (validationError) setValidationError("");
                     }}
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl text-base focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all font-medium outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl text-sm focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all font-medium outline-none"
                   />
                 </div>
               </div>
 
-              {/* Mobile Number Input */}
+              {/* Mobile Number Input (Optional) */}
               <div className="space-y-1.5 text-left">
-                <label className="text-xs font-bold text-slate-700">Mobile Number *</label>
+                <label className="text-xs font-bold text-slate-700">
+                  Mobile Number <span className="text-slate-400 font-normal">(Optional)</span>
+                </label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 pointer-events-none" />
                   <input
                     type="tel"
                     inputMode="numeric"
@@ -311,23 +334,22 @@ export default function TableOrderingPage({
                       if (val.length <= 10) setTempPhone(val);
                       if (validationError) setValidationError("");
                     }}
-                    required
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl text-base focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all font-medium outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl text-sm focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all font-medium outline-none"
                   />
                 </div>
-                <p className="text-[11px] text-slate-400 pl-1">For kitchen order status and table billing</p>
+                <p className="text-[10px] text-slate-400 pl-1">For digital receipt & live kitchen order status</p>
               </div>
 
               {/* Submit CTA */}
               <Button
                 type="submit"
-                className="w-full text-white font-extrabold h-12 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-[0.98] cursor-pointer border-none text-sm mt-2"
+                className="w-full text-white font-black h-11 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-[0.98] cursor-pointer border-none text-xs mt-2"
                 style={{
                   backgroundImage: `linear-gradient(135deg, ${primaryCol}, #f97316)`,
                   boxShadow: `0 8px 20px -4px ${primaryCol}40`,
                 }}
               >
-                View Menu & Order
+                Continue to Menu
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
@@ -338,53 +360,69 @@ export default function TableOrderingPage({
                 onClick={handleBrowseFirst}
                 className="text-xs font-bold text-slate-500 hover:text-orange-600 transition-colors py-1 cursor-pointer"
               >
-                Browse Menu First →
+                Or Browse Menu as Guest →
               </button>
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-400 text-center">
-            Powered by <strong className="text-slate-600">ServeDesk</strong>
-          </p>
+          {/* ServeDesk Powered by Alvora Tech Solution Footer Badge */}
+          <div className="pt-2 text-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/90 backdrop-blur-sm border border-slate-200/90 rounded-full shadow-xs">
+              <Sparkles className="h-3 w-3 text-orange-500 shrink-0" />
+              <span className="text-[11px] font-black tracking-wide text-slate-800 uppercase">
+                ServeDesk
+              </span>
+              <span className="text-[10px] text-slate-300 font-bold">•</span>
+              <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                Powered by Alvora Tech Solution
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   // Handle Waiter Request Calls
-  const handleCallWaiter = () => {
-    Swal.fire({
-      title: "🛎️ Call Waiter?",
-      text: `Notify restaurant staff to assist Table ${tableNumber}?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Call Waiter",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: primaryCol,
-    }).then((result) => {
-      if (result.isConfirmed) {
-        if (socket && restaurant) {
-          socket.emit("call-waiter", {
-            branchId: (restaurant as unknown as { branchId?: string })?.branchId || "",
-            tableNumber,
-          });
-          Swal.fire({
-            icon: "success",
-            title: "Waiter Notified!",
-            text: "A floor staff member is on their way to Table " + tableNumber,
-            timer: 2000,
-            showConfirmButton: false,
-          });
-        } else {
-          Swal.fire({
-            icon: "warning",
-            title: "Connecting...",
-            text: "Connecting to restaurant server. Please try again in a moment.",
-            confirmButtonColor: primaryCol,
-          });
-        }
+  const handleCallWaiterAction = async (reason: string) => {
+    try {
+      setCallingWaiter(true);
+      const branchId = (restaurant as unknown as { branchId?: string })?.branchId || "";
+      await apiFetch("/api/customer/call-waiter", {
+        method: "POST",
+        body: JSON.stringify({
+          restaurantId: restaurant._id,
+          branchId,
+          tableNumber,
+          customerName: verifiedName || customerName || "Guest",
+          reason,
+        }),
+      });
+      if (socket) {
+        socket.emit("call-waiter", {
+          branchId,
+          tableNumber,
+          customerName: verifiedName || customerName || "Guest",
+          reason,
+        });
       }
-    });
+      setWaiterModalOpen(false);
+      Swal.fire({
+        icon: "success",
+        title: "🛎️ Waiter Notified!",
+        text: `Staff has been alerted to assist Table ${tableNumber} for "${reason}".`,
+        timer: 2500,
+        showConfirmButton: false,
+      });
+    } catch (err: unknown) {
+      Swal.fire({
+        icon: "error",
+        title: "Request Failed",
+        text: (err as Error).message || "Failed to call waiter",
+      });
+    } finally {
+      setCallingWaiter(false);
+    }
   };
 
   // Open item customizing options or directly add to cart
@@ -492,7 +530,7 @@ export default function TableOrderingPage({
     }
   };
 
-  // Order placing handler
+  // Order placing handler (supports both new orders and appending to table bill)
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) {
@@ -505,24 +543,14 @@ export default function TableOrderingPage({
       return;
     }
 
-    const trimmedName = customerName.trim();
+    const trimmedName = customerName.trim() || verifiedName || "Guest";
     const cleanPhone = customerPhone.replace(/\D/g, "");
 
-    if (!trimmedName || !cleanPhone) {
-      Swal.fire({
-        icon: "warning",
-        title: "Details Required",
-        text: "Please enter your name and phone number for the order.",
-        confirmButtonColor: primaryCol,
-      });
-      return;
-    }
-
-    if (cleanPhone.length !== 10) {
+    if (customerPhone.trim() && cleanPhone.length !== 10) {
       Swal.fire({
         icon: "warning",
         title: "Invalid Phone Number",
-        text: "Phone number must be exactly 10 digits.",
+        text: "Please enter a valid 10-digit mobile number or leave it blank.",
         confirmButtonColor: primaryCol,
       });
       return;
@@ -537,6 +565,7 @@ export default function TableOrderingPage({
         customerPhone: cleanPhone,
         paymentMethod,
         couponCode: coupon?.code || undefined,
+        existingOrderId: activeTableOrder?._id || activeOrderId || undefined,
         items: items.map((i) => ({
           menuItemId: i.menuItemId,
           name: i.name,
@@ -559,17 +588,21 @@ export default function TableOrderingPage({
             branchId: res.branchId,
             orderId: res.orderId,
             tableNumber,
+            isAddition: Boolean(res.isAppended),
           });
         }
 
         clearCart();
         setCartOpen(false);
+        setActiveOrderId(res.orderId);
 
         await Swal.fire({
           icon: "success",
-          title: "🎉 Order Sent to Kitchen!",
-          text: `Table ${tableNumber} order #${res.orderId.slice(-5).toUpperCase()} is being prepared!`,
-          timer: 1800,
+          title: res.isAppended ? "🎉 Dishes Added to Table Bill!" : "🎉 Order Sent to Kitchen!",
+          text: res.isAppended
+            ? `Dishes added to Table ${tableNumber} bill! (Consolidated Total: ₹${Math.round(res.total)})`
+            : `Table ${tableNumber} order #${res.orderId.slice(-5).toUpperCase()} is being prepared!`,
+          timer: 2000,
           showConfirmButton: false,
         });
 
@@ -649,7 +682,7 @@ export default function TableOrderingPage({
         </div>
 
         <button
-          onClick={handleCallWaiter}
+          onClick={() => setWaiterModalOpen(true)}
           className="flex items-center gap-1.5 px-3 py-2 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 text-orange-700 rounded-xl text-xs font-extrabold transition-transform active:scale-95 shadow-xs cursor-pointer shrink-0"
         >
           <BellRing className="h-4 w-4 text-orange-600" />
@@ -658,7 +691,39 @@ export default function TableOrderingPage({
       </header>
 
       {/* Main Container */}
-      <main className="max-w-4xl mx-auto w-full px-4 mt-4 space-y-5 flex-1 z-10">
+      <main className="max-w-4xl mx-auto w-full px-4 mt-4 space-y-4 flex-1 z-10 pb-8">
+        {/* Active Consolidated Table Bill Banner */}
+        {activeTableOrder && (
+          <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white rounded-3xl p-4 shadow-lg shadow-orange-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                <Receipt className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
+                    Running Table Bill · #{activeTableOrder._id.slice(-6).toUpperCase()}
+                  </span>
+                </div>
+                <h3 className="text-sm font-black text-white mt-0.5">
+                  Total Bill: ₹{Math.round(activeTableOrder.total)} • Status: {activeTableOrder.status}
+                </h3>
+                <p className="text-[11px] text-orange-100 font-medium">
+                  Adding more items will merge into this single bill for Table {tableNumber}.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push(`/${restaurantSlug}/table/${tableNumber}/track/${activeTableOrder._id}`)}
+              className="bg-white text-orange-600 hover:bg-orange-50 px-4 py-2 rounded-2xl text-xs font-black shadow-xs shrink-0 self-start sm:self-auto transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <span>View Bill & Status</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Table Welcome Banner */}
         <div className="bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-5 shadow-xs flex items-center justify-between gap-4">
           <div className="space-y-1">
@@ -1125,6 +1190,15 @@ export default function TableOrderingPage({
                 id="cartPlaceOrderForm"
                 className="border-t border-slate-100 pt-4 space-y-3"
               >
+                {activeTableOrder && (
+                  <div className="bg-orange-50 border border-orange-200/90 rounded-2xl p-3 flex items-center gap-2.5 text-xs text-orange-900 font-bold mb-3">
+                    <Receipt className="h-4 w-4 text-orange-600 shrink-0" />
+                    <span>
+                      Adding to Table {tableNumber} running bill (#{activeTableOrder._id.slice(-6).toUpperCase()})
+                    </span>
+                  </div>
+                )}
+
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">
                   Diner Details
                 </h4>
@@ -1133,7 +1207,7 @@ export default function TableOrderingPage({
                     <label className="text-xs font-bold text-slate-700 block mb-1">Your Name *</label>
                     <input
                       type="text"
-                      placeholder="Name for the bill"
+                      placeholder="e.g. Rahul Sharma"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       required
@@ -1142,20 +1216,22 @@ export default function TableOrderingPage({
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Mobile Number *</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Mobile Number <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
                     <input
                       type="tel"
                       inputMode="numeric"
-                      placeholder="10-digit number"
+                      placeholder="10-digit number (Optional)"
                       maxLength={10}
                       value={customerPhone}
                       onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (val.length <= 10) setCustomerPhone(val);
                       }}
-                      required
                       className="w-full bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl px-4 py-3 text-base sm:text-sm font-medium focus:bg-white focus:outline-none focus:border-orange-500 transition-all"
                     />
+                    <p className="text-[10px] text-slate-400 mt-1 pl-1">For digital receipt & live order tracking</p>
                   </div>
 
                   <div>
@@ -1220,6 +1296,11 @@ export default function TableOrderingPage({
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Sending to Kitchen...
                   </>
+                ) : activeTableOrder ? (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Confirm & Add to Table Bill (₹{Math.round(total)})
+                  </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
@@ -1227,6 +1308,148 @@ export default function TableOrderingPage({
                   </>
                 )}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Floating Cart Summary Pill */}
+      {totalQty > 0 && !cartOpen && (
+        <div className="fixed bottom-16 left-3 right-3 z-40 md:hidden animate-in slide-in-from-bottom duration-200">
+          <button
+            onClick={() => setCartOpen(true)}
+            className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between font-extrabold text-sm border border-white/20 active:scale-[0.99] transition-transform cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="bg-white/25 px-2.5 py-1 rounded-xl text-xs font-black">
+                {totalQty} {totalQty === 1 ? "Item" : "Items"}
+              </span>
+              <span className="text-white/60">•</span>
+              <span className="font-black text-base">₹{Math.round(total)}</span>
+            </div>
+            <span className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-black bg-white text-orange-600 px-3 py-1.5 rounded-xl shadow-xs">
+              {activeTableOrder ? "Add to Bill" : "View Cart"} <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Mobile App-Style Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-2 py-1.5">
+        <div className="max-w-md mx-auto grid grid-cols-4 items-center gap-1">
+          {/* Menu Tab */}
+          <button
+            onClick={() => {
+              setCartOpen(false);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex flex-col items-center justify-center py-1 text-orange-600 font-bold transition-all active:scale-95 cursor-pointer"
+          >
+            <UtensilsCrossed className="h-5 w-5" />
+            <span className="text-[10px] mt-1 font-black">Menu</span>
+          </button>
+
+          {/* Cart Tab */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="flex flex-col items-center justify-center py-1 text-slate-600 hover:text-slate-900 font-bold transition-all active:scale-95 cursor-pointer relative"
+          >
+            <div className="relative">
+              <ShoppingBag className="h-5 w-5 text-slate-700" />
+              {totalQty > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-orange-600 text-white text-[10px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center shadow-xs">
+                  {totalQty}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] mt-1 font-semibold text-slate-700">
+              {totalQty > 0 ? `₹${Math.round(total)}` : "Cart"}
+            </span>
+          </button>
+
+          {/* Track Order / Table Bill Tab */}
+          <button
+            onClick={() => {
+              if (activeTableOrder?._id || activeOrderId) {
+                router.push(`/${restaurantSlug}/table/${tableNumber}/track/${activeTableOrder?._id || activeOrderId}`);
+              } else {
+                Swal.fire({
+                  icon: "info",
+                  title: "No Active Order",
+                  text: `No active order on Table ${tableNumber} yet. Add dishes from the menu to place an order!`,
+                  confirmButtonColor: primaryCol,
+                });
+              }
+            }}
+            className="flex flex-col items-center justify-center py-1 text-slate-600 hover:text-slate-900 font-bold transition-all active:scale-95 cursor-pointer relative"
+          >
+            <div className="relative">
+              <Receipt className="h-5 w-5 text-slate-700" />
+              {activeTableOrder && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
+              )}
+            </div>
+            <span className="text-[10px] mt-1 font-semibold text-slate-700">
+              {activeTableOrder ? "Table Bill" : "Track"}
+            </span>
+          </button>
+
+          {/* Call Waiter Tab */}
+          <button
+            onClick={() => setWaiterModalOpen(true)}
+            className="flex flex-col items-center justify-center py-1 text-slate-600 hover:text-slate-900 font-bold transition-all active:scale-95 cursor-pointer"
+          >
+            <BellRing className="h-5 w-5 text-amber-500 animate-bounce" />
+            <span className="text-[10px] mt-1 font-semibold text-slate-700">Call Waiter</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Waiter Request Modal */}
+      {waiterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+                  <BellRing className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Call Waiter · Table {tableNumber}</h3>
+                  <p className="text-[11px] text-slate-400">Select what assistance you need</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setWaiterModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-xl cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { label: "Water Needed", icon: "💧" },
+                { label: "Clean Table", icon: "🍽️" },
+                { label: "Call Floor Waiter", icon: "🛎️" },
+                { label: "Bill / Payment", icon: "💳" },
+              ].map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => handleCallWaiterAction(opt.label)}
+                  disabled={callingWaiter}
+                  className="flex flex-col items-center justify-center p-3.5 bg-slate-50 hover:bg-orange-50/70 border border-slate-200 hover:border-orange-300 rounded-2xl transition-all cursor-pointer text-center group active:scale-95"
+                >
+                  <span className="text-xl mb-1">{opt.icon}</span>
+                  <span className="text-xs font-bold text-slate-700 group-hover:text-orange-600">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="pt-2 text-center border-t border-slate-100">
+              <p className="text-[11px] text-slate-400">
+                Powered by <strong className="text-slate-700">ServeDesk · Alvora Tech Solution</strong>
+              </p>
             </div>
           </div>
         </div>

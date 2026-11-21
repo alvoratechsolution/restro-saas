@@ -24,6 +24,8 @@ const io = new Server(server, {
   }
 });
 
+app.set("io", io);
+
 // Global Middlewares
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: "*" }));
