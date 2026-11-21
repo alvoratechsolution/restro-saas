@@ -146,6 +146,17 @@ export default function TableOrderingPage({
   // Show Cart Drawer
   const [cartOpen, setCartOpen] = useState(false);
 
+  // Added item toast pill state (zero backdrop, compact, professional)
+  const [addedToast, setAddedToast] = useState<{ name: string; id: number } | null>(null);
+
+  const triggerAddToast = (name: string) => {
+    const id = Date.now();
+    setAddedToast({ name, id });
+    setTimeout(() => {
+      setAddedToast((prev) => (prev?.id === id ? null : prev));
+    }, 1400);
+  };
+
   // Waiter modal states
   const [waiterModalOpen, setWaiterModalOpen] = useState(false);
   const [callingWaiter, setCallingWaiter] = useState(false);
@@ -440,14 +451,7 @@ export default function TableOrderingPage({
         quantity: 1,
         selectedAddons: [],
       });
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "success",
-        title: `Added ${item.name} to order`,
-        showConfirmButton: false,
-        timer: 1400,
-      });
+      triggerAddToast(item.name);
     }
   };
 
@@ -468,14 +472,7 @@ export default function TableOrderingPage({
       specialInstructions: instructions || undefined,
     });
 
-    Swal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "success",
-      title: `Added ${customizingItem.name}`,
-      showConfirmButton: false,
-      timer: 1400,
-    });
+    triggerAddToast(customizingItem.name);
     setCustomizingItem(null);
   };
 
@@ -689,6 +686,14 @@ export default function TableOrderingPage({
           <span className="hidden xs:inline">Call Waiter</span>
         </button>
       </header>
+
+      {/* Sleek Compact Notification Pill (Zero Backdrop, Zero Black Shadow) */}
+      {addedToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 text-xs font-bold pointer-events-none animate-in fade-in slide-in-from-top-3 duration-200 border border-white/10">
+          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+          <span className="truncate max-w-[220px]">Added {addedToast.name}</span>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-4xl mx-auto w-full px-4 mt-4 space-y-4 flex-1 z-10 pb-8">
@@ -921,40 +926,6 @@ export default function TableOrderingPage({
           Powered by <strong className="text-slate-600">ServeDesk Dining OS</strong>
         </p>
       </footer>
-
-      {/* Floating Bottom Cart Island (Sticky on Mobile) */}
-      {totalQty > 0 && (
-        <div className="fixed bottom-4 inset-x-4 max-w-md mx-auto z-40">
-          <button
-            onClick={() => setCartOpen(true)}
-            className="w-full text-white p-3.5 sm:p-4 rounded-3xl font-black flex items-center justify-between shadow-2xl transition-transform active:scale-[0.98] cursor-pointer border-none"
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${primaryCol}, #f97316)`,
-              boxShadow: `0 10px 25px -5px ${primaryCol}50`,
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 bg-white/20 rounded-2xl flex items-center justify-center">
-                <ShoppingBag className="h-5 w-5 text-white" />
-              </div>
-              <div className="text-left">
-                <span className="text-sm font-black block leading-none">
-                  {totalQty} {totalQty === 1 ? "Item" : "Items"} in Cart
-                </span>
-                <span className="text-[10px] text-white/80 font-semibold mt-0.5 block">
-                  Table {tableNumber}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-base font-black">₹{total.toFixed(0)}</span>
-              <div className="h-8 w-8 bg-white/20 rounded-xl flex items-center justify-center">
-                <ArrowRight className="h-4 w-4 text-white" />
-              </div>
-            </div>
-          </button>
-        </div>
-      )}
 
       {/* Customise Item Modal (Bottom Sheet on Mobile) */}
       {customizingItem && (
@@ -1313,23 +1284,37 @@ export default function TableOrderingPage({
         </div>
       )}
 
-      {/* Mobile Floating Cart Summary Pill */}
+      {/* Compact Floating Cart Pill Above Bottom Nav */}
       {totalQty > 0 && !cartOpen && (
-        <div className="fixed bottom-16 left-3 right-3 z-40 md:hidden animate-in slide-in-from-bottom duration-200">
+        <div className="fixed bottom-[58px] left-3 right-3 z-30 md:hidden max-w-sm mx-auto animate-in slide-in-from-bottom duration-150">
           <button
             onClick={() => setCartOpen(true)}
-            className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white p-3.5 rounded-2xl shadow-xl flex items-center justify-between font-extrabold text-sm border border-white/20 active:scale-[0.99] transition-transform cursor-pointer"
+            className="w-full bg-slate-900/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center justify-between font-bold text-xs border border-white/10 active:scale-[0.98] transition-transform cursor-pointer"
           >
-            <div className="flex items-center gap-2.5">
-              <span className="bg-white/25 px-2.5 py-1 rounded-xl text-xs font-black">
+            <div className="flex items-center gap-2">
+              <span className="bg-orange-500 text-white px-2 py-0.5 rounded-md text-[11px] font-black">
                 {totalQty} {totalQty === 1 ? "Item" : "Items"}
               </span>
-              <span className="text-white/60">•</span>
-              <span className="font-black text-base">₹{Math.round(total)}</span>
+              <span className="text-slate-400">•</span>
+              <span className="font-extrabold text-sm text-white">₹{Math.round(total)}</span>
             </div>
-            <span className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-black bg-white text-orange-600 px-3 py-1.5 rounded-xl shadow-xs">
+            <span className="flex items-center gap-1 text-[11px] font-black text-orange-400">
               {activeTableOrder ? "Add to Bill" : "View Cart"} <ArrowRight className="h-3.5 w-3.5" />
             </span>
+          </button>
+        </div>
+      )}
+
+      {/* Desktop Floating Cart Button */}
+      {totalQty > 0 && !cartOpen && (
+        <div className="hidden md:block fixed bottom-6 right-6 z-40">
+          <button
+            onClick={() => setCartOpen(true)}
+            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 font-black text-xs hover:shadow-2xl transition-all cursor-pointer"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span>{totalQty} Items • ₹{Math.round(total)}</span>
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       )}

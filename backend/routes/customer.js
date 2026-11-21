@@ -119,6 +119,29 @@ router.post("/coupons/validate", async (req, res) => {
   }
 });
 
+// Helper: match table flexibly (e.g. "1" matches "1", "Table 1", "T1", "Table-1")
+async function findTablesForNumber(restaurantId, tableNumberStr) {
+  if (!tableNumberStr) return [];
+  const cleanTable = decodeURIComponent(tableNumberStr).trim();
+  const digitsOnly = cleanTable.replace(/\D/g, "");
+
+  const conditions = [
+    { tableNumber: { $regex: new RegExp(`^${cleanTable.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, "i") } }
+  ];
+  if (digitsOnly) {
+    conditions.push(
+      { tableNumber: { $regex: new RegExp(`^table\\s*${digitsOnly}$`, "i") } },
+      { tableNumber: { $regex: new RegExp(`^t${digitsOnly}$`, "i") } },
+      { tableNumber: digitsOnly }
+    );
+  }
+
+  return await Table.find({
+    restaurantId,
+    $or: conditions
+  });
+}
+
 // 3. PLACE OR APPEND ORDER (CONSOLIDATED TABLE BILLING)
 router.post("/orders", async (req, res) => {
   try {
@@ -138,10 +161,8 @@ router.post("/orders", async (req, res) => {
     }
 
     const cleanTableNumber = decodeURIComponent(tableNumber).trim();
-    let table = await Table.findOne({
-      restaurantId,
-      tableNumber: { $regex: new RegExp(`^${cleanTableNumber.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, "i") }
-    });
+    let matchingTables = await findTablesForNumber(restaurantId, tableNumber);
+    let table = matchingTables[0];
 
     if (table) {
       if (!table.isActive) {
@@ -167,6 +188,12 @@ router.post("/orders", async (req, res) => {
         status: "available",
         isActive: true
       });
+      matchingTables = [table];
+    }
+
+    const allTableIds = matchingTables.map(t => t._id);
+    if (!allTableIds.some(id => id.toString() === table._id.toString())) {
+      allTableIds.push(table._id);
     }
 
     const restaurant = await Restaurant.findById(restaurantId).populate("subscriptionPlan");
@@ -182,18 +209,15 @@ router.post("/orders", async (req, res) => {
     // CHECK IF WE SHOULD CONSOLIDATE INTO AN EXISTING ACTIVE TABLE ORDER
     let existingOrder = null;
     if (existingOrderId) {
-      existingOrder = await Order.findOne({
-        _id: existingOrderId,
-        restaurantId,
-        status: { $nin: ["Completed", "Cancelled"] },
-        paymentStatus: { $ne: "Paid" }
-      });
+      existingOrder = await Order.findById(existingOrderId);
+      if (existingOrder && (existingOrder.status === "Completed" || existingOrder.status === "Cancelled" || existingOrder.paymentStatus === "Paid")) {
+        existingOrder = null;
+      }
     }
     if (!existingOrder) {
       existingOrder = await Order.findOne({
-        tableId: table._id,
-        restaurantId,
-        status: { $in: ["Pending", "Accepted", "Preparing", "Ready"] },
+        tableId: { $in: allTableIds },
+        status: { $nin: ["Completed", "Cancelled"] },
         paymentStatus: { $ne: "Paid" }
       }).sort({ createdAt: -1 });
     }
@@ -532,17 +556,13 @@ router.get("/active-order", async (req, res) => {
     const restaurant = await Restaurant.findOne({ slug });
     if (!restaurant) return res.status(404).json({ error: "Restaurant not found" });
 
-    const cleanTableNumber = decodeURIComponent(tableNumber).trim();
-    const table = await Table.findOne({
-      restaurantId: restaurant._id,
-      tableNumber: { $regex: new RegExp(`^${cleanTableNumber.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, "i") }
-    });
-    if (!table) return res.json({ success: true, activeOrder: null });
+    const matchingTables = await findTablesForNumber(restaurant._id, tableNumber);
+    const allTableIds = matchingTables.map(t => t._id);
+    if (allTableIds.length === 0) return res.json({ success: true, activeOrder: null });
 
     const activeOrder = await Order.findOne({
-      restaurantId: restaurant._id,
-      tableId: table._id,
-      status: { $in: ["Pending", "Accepted", "Preparing", "Ready"] },
+      tableId: { $in: allTableIds },
+      status: { $nin: ["Completed", "Cancelled"] },
       paymentStatus: { $ne: "Paid" }
     })
       .sort({ createdAt: -1 })

@@ -627,10 +627,57 @@ router.get("/orders", checkFeature("orders"), async (req, res) => {
       .populate("tableId")
       .sort({ createdAt: -1 });
 
+    // Auto-consolidate any duplicate active unpaid orders for the same table into one unified order
+    const tableActiveMap = new Map();
+    for (const ord of orders) {
+      if (ord.tableId && ord.status !== "Completed" && ord.status !== "Cancelled" && ord.paymentStatus !== "Paid") {
+        const rawTable = ord.tableId.tableNumber || "";
+        const tableKey = rawTable.toLowerCase().replace(/table\s*/i, "").replace(/t/i, "").trim() || rawTable.trim().toLowerCase();
+        if (!tableActiveMap.has(tableKey)) {
+          tableActiveMap.set(tableKey, [ord]);
+        } else {
+          tableActiveMap.get(tableKey).push(ord);
+        }
+      }
+    }
+
+    let needRefetch = false;
+    for (const [, activeList] of tableActiveMap.entries()) {
+      if (activeList.length > 1) {
+        // Keep earliest as primary
+        activeList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const primary = activeList[0];
+        for (let i = 1; i < activeList.length; i++) {
+          const secondary = activeList[i];
+          if (secondary.items && secondary.items.length > 0) {
+            const itemIds = secondary.items.map(it => it._id);
+            await OrderItem.updateMany({ _id: { $in: itemIds } }, { orderId: primary._id });
+            const primaryItemIds = primary.items.map(it => it._id.toString());
+            for (const sItem of secondary.items) {
+              if (!primaryItemIds.includes(sItem._id.toString())) {
+                primary.items.push(sItem._id);
+              }
+            }
+            primary.subtotal = Math.round((primary.subtotal || 0) + (secondary.subtotal || 0));
+            primary.cgst = Math.round((primary.cgst || 0) + (secondary.cgst || 0));
+            primary.sgst = Math.round((primary.sgst || 0) + (secondary.sgst || 0));
+            primary.total = Math.round((primary.total || 0) + (secondary.total || 0));
+            await primary.save();
+          }
+          await Order.findByIdAndDelete(secondary._id);
+          needRefetch = true;
+        }
+      }
+    }
+
+    const finalOrders = needRefetch
+      ? await Order.find(query).populate({ path: "items", populate: { path: "menuItemId" } }).populate("tableId").sort({ createdAt: -1 })
+      : orders;
+
     const restaurant = await Restaurant.findById(req.user.restaurantId);
     return res.json({
       success: true,
-      data: orders,
+      data: finalOrders,
       restaurant: restaurant ? { name: restaurant.name, address: restaurant.address, phone: restaurant.phone } : null
     });
   } catch (error) {
