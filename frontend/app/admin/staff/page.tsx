@@ -95,15 +95,15 @@ export default function StaffPage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Staff Credentials</h1>
-          <p className="text-slate-400 mt-1">Manage team access codes, branch manager logs, and service terminals.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Staff Credentials</h1>
+          <p className="text-slate-500 mt-0.5 text-xs font-medium">Manage team access codes, branch manager logs, and service terminals.</p>
         </div>
         <Button
           onClick={() => setShowModal(true)}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2 shadow-lg shadow-orange-500/10"
+          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold flex items-center gap-2 shadow-sm text-xs px-4 py-2 rounded-xl cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           Add Staff
@@ -115,50 +115,53 @@ export default function StaffPage() {
           <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
         </div>
       ) : (
-        <Card className="bg-slate-900/20 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+        <Card className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-800/80 bg-slate-900/40 text-slate-400 font-semibold">
-                  <th className="py-4 px-6">Name</th>
-                  <th className="py-4 px-6">Email Address</th>
-                  <th className="py-4 px-6">System Role</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
+                <tr className="border-b border-slate-200/80 bg-slate-50/80 text-slate-500 font-bold uppercase text-[11px] tracking-wider">
+                  <th className="py-3.5 px-6">Name</th>
+                  <th className="py-3.5 px-6">Email Address</th>
+                  <th className="py-3.5 px-6">System Role</th>
+                  <th className="py-3.5 px-6">Status</th>
+                  <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {staff.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-500">
+                    <td colSpan={5} className="py-12 text-center text-slate-400 text-xs font-medium">
                       No staff members registered. Click &quot;Add Staff&quot; to authorize a terminal.
                     </td>
                   </tr>
                 ) : (
                   staff.map((member) => (
-                    <tr key={member._id} className="hover:bg-slate-900/20 transition-colors">
-                      <td className="py-4 px-6 font-semibold text-white flex items-center gap-2.5">
-                        <UserCheck className="h-4 w-4 text-orange-500" />
+                    <tr key={member._id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3.5 px-6 font-bold text-slate-900 flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100">
+                          <UserCheck className="h-3.5 w-3.5" />
+                        </div>
                         {member.name}
                       </td>
-                      <td className="py-4 px-6 text-slate-400">{member.email}</td>
-                      <td className="py-4 px-6 font-medium text-slate-200">
-                        <span className="text-xs bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg text-slate-300">
+                      <td className="py-3.5 px-6 text-slate-500 text-xs">{member.email}</td>
+                      <td className="py-3.5 px-6 font-semibold">
+                        <span className="text-[11px] bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-slate-700 font-bold">
                           {roleLabels[member.role] || member.role}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className="text-emerald-400 flex items-center gap-1.5 text-xs font-semibold">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <td className="py-3.5 px-6">
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-200/70 inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           Active
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-3.5 px-6 text-right">
                         <button
                           onClick={() => handleDelete(member._id)}
-                          className="p-1.5 text-red-500 hover:text-red-400 transition-colors bg-red-950/20 rounded border border-red-950/40 hover:border-red-900/50"
+                          className="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors rounded-lg border border-rose-200/60 cursor-pointer"
+                          title="Remove Staff"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </td>
                     </tr>
@@ -172,13 +175,19 @@ export default function StaffPage() {
 
       {/* Staff Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-            <div className="p-6 border-b border-slate-850">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <KeyRound className="h-5 w-5 text-orange-500" />
                 Register Staff Access
               </h2>
+              <button
+                onClick={resetForm}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -222,18 +231,18 @@ export default function StaffPage() {
                 required
               />
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
+              <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <Button
                   type="button"
                   onClick={resetForm}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-4 py-2 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 cursor-pointer shadow-sm"
                 >
                   {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Register Staff

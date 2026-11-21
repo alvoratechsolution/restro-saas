@@ -164,6 +164,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   });
 
   activeFeatures.forEach((feature) => {
+    // Exclude custom-domain and white-label from admin sidebar
+    if (feature === "custom-domain" || feature === "customdomain" || feature === "white-label") {
+      return;
+    }
     if (!SYSTEM_FEATURES.includes(feature)) {
       if (!filteredNavItems.some((item) => item.feature === feature)) {
         filteredNavItems.push({
@@ -193,25 +197,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col md:flex-row font-sans">
       {/* ================= SIDEBAR FOR DESKTOP ================= */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-slate-800/80 bg-[#0b0f19] p-6 shrink-0 shadow-2xl z-20">
+      <aside className="hidden md:flex flex-col w-56 border-r border-slate-800/80 bg-[#0b0f19] p-4 shrink-0 shadow-2xl z-20">
         {/* Brand identity header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-orange-500/25 bg-slate-900 border border-orange-500/30 shrink-0">
+        <div className="flex items-center gap-2.5 mb-6 px-1">
+          <div className="h-8 w-8 rounded-lg overflow-hidden shadow-md shadow-orange-500/25 bg-slate-900 border border-orange-500/30 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={restaurantLogo} alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="overflow-hidden">
-            <h1 className="font-black text-white text-base tracking-tight truncate max-w-[150px]">
+            <h1 className="font-bold text-white text-sm tracking-tight truncate max-w-[140px]">
               {restaurantName}
             </h1>
-            <p className="text-[9px] text-orange-400 font-bold uppercase tracking-wider truncate">
+            <p className="text-[8px] text-orange-400 font-bold uppercase tracking-wider truncate">
               ServeDesk · Alvora Tech
             </p>
           </div>
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto pr-0.5">
           {filteredNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -219,35 +223,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
                   isActive
-                    ? "bg-gradient-to-r from-orange-500/20 to-orange-500/10 border-l-4 border-orange-500 text-orange-400 font-bold shadow-md shadow-orange-500/10"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                    ? "bg-gradient-to-r from-orange-500/20 to-orange-500/10 border-l-3 border-orange-500 text-orange-400 font-bold shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? "text-orange-400" : "text-slate-500"}`} />
-                {item.name}
+                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-orange-400" : "text-slate-500"}`} />
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom User Profile */}
-        <div className="mt-auto pt-6 border-t border-slate-800/80">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
-              <User className="h-4 w-4" />
+        <div className="mt-auto pt-4 border-t border-slate-800/80">
+          <div className="flex items-center gap-2.5 mb-3 px-1">
+            <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-xs shrink-0">
+              <User className="h-3.5 w-3.5" />
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-white truncate">{session.user?.name}</p>
-              <p className="text-[10px] text-slate-400 truncate">{session.user?.email}</p>
+              <p className="text-[9px] text-slate-400 truncate">{session.user?.email}</p>
             </div>
           </div>
           <button
             onClick={() => nextSignOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-200 cursor-pointer"
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-150 cursor-pointer"
           >
-            <LogOut className="h-4.5 w-4.5" />
+            <LogOut className="h-3.5 w-3.5" />
             Sign Out
           </button>
         </div>
@@ -256,32 +260,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ================= RIGHT MAIN BODY WRAPPER ================= */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
         {/* ================= ADMIN TOP BAR ================= */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-6 py-3.5 shadow-xs flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-5 py-2.5 shadow-xs flex items-center justify-between gap-4">
           {/* Left: Mobile Menu Toggle + Restaurant Brand Display */}
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="md:hidden p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
             {/* Restaurant Brand Identity: Logo beside Restaurant Name */}
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl overflow-hidden shadow-md shadow-orange-500/20 bg-slate-900 border border-orange-500/30 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg overflow-hidden shadow-sm bg-slate-900 border border-orange-500/30 shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={restaurantLogo} alt="Restaurant Logo" className="h-full w-full object-cover" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-black text-slate-900 text-lg tracking-tight leading-none truncate max-w-[160px] sm:max-w-xs">
+                  <span className="font-extrabold text-slate-900 text-base tracking-tight leading-none truncate max-w-[150px] sm:max-w-xs">
                     {restaurantName}
                   </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                  <span className="hidden sm:inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Store
                   </span>
                 </div>
-                <p className="text-[10px] font-bold text-orange-600 tracking-wide mt-1">
+                <p className="text-[9px] font-bold text-orange-600 tracking-wide mt-0.5">
                   ServeDesk · Powered by Alvora Tech Solution
                 </p>
               </div>
@@ -289,16 +293,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Right: Live Menu Shortcut, Waiter Alerts Bell, User Profile Pill */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Quick Preview Customer QR Menu Link */}
             <a
               href={`/${restaurantSlug}/table/1`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 text-orange-700 text-xs font-bold px-3 py-1.5 rounded-xl transition-all shadow-xs cursor-pointer"
+              className="hidden lg:inline-flex items-center gap-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 text-orange-700 text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer"
               title="Open customer digital menu view in new tab"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
+              <ExternalLink className="h-3 w-3" />
               Live QR Menu
             </a>
 

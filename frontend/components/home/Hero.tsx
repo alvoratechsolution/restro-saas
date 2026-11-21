@@ -44,9 +44,9 @@ export default function Hero() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg shadow-orange-500/10"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-bold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-md"
             >
-              <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+              <Sparkles className="h-3 w-3 text-amber-400 animate-pulse" />
               MODERN RESTAURANT MANAGEMENT PLATFORM
             </motion.div>
 
@@ -55,7 +55,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-[3.5rem] xl:text-[4rem] font-black tracking-tight leading-[1.08] text-white"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.15rem] font-black tracking-tight leading-[1.12] text-white"
             >
               Run Your Restaurant Smarter.{" "}
               <span className="text-orange-500 block sm:inline">
@@ -68,7 +68,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-slate-300 text-base md:text-lg max-w-xl font-normal leading-relaxed"
+              className="text-slate-300 text-sm sm:text-base max-w-lg font-normal leading-relaxed"
             >
               Manage digital QR ordering, kitchen operations, staff requests, and restaurant performance from one powerful platform.
             </motion.p>
@@ -78,11 +78,11 @@ export default function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center pt-2"
+              className="flex flex-col sm:flex-row gap-3.5 items-stretch sm:items-center pt-1"
             >
               <Link
                 href="/register"
-                className="bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold px-8 py-3.5 rounded-full flex items-center justify-center gap-2 shadow-xl shadow-orange-500/25 active:scale-95 transition-all text-sm group"
+                className="bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold px-6 py-3 rounded-full flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 active:scale-95 transition-all text-xs sm:text-sm group"
               >
                 Start Free Trial
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -90,9 +90,9 @@ export default function Hero() {
 
               <a
                 href="#interactive-demo"
-                className="bg-white/5 border border-white/20 hover:bg-white/10 text-white font-bold px-7 py-3.5 rounded-full flex items-center justify-center gap-2 backdrop-blur-md active:scale-95 transition-all text-sm"
+                className="bg-white/5 border border-white/20 hover:bg-white/10 text-white font-bold px-6 py-3 rounded-full flex items-center justify-center gap-2 backdrop-blur-md active:scale-95 transition-all text-xs sm:text-sm"
               >
-                <Play className="h-4 w-4 text-white fill-white" />
+                <Play className="h-3.5 w-3.5 text-white fill-white" />
                 Watch Live Demo
               </a>
             </motion.div>
@@ -454,12 +454,12 @@ export default function Hero() {
               </div>
             </motion.div>
 
-            {/* BOTTOM FLOATING KITCHEN ORDER ALERT BADGE */}
+            {/* Bottom Floating Alert Pill */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.8 }}
-              className="absolute -bottom-8 left-1/3 z-40 bg-[#161b26]/95 border border-orange-500/30 rounded-2xl px-4 py-2.5 shadow-2xl backdrop-blur-xl flex items-center gap-3 hidden sm:flex"
+              className="absolute -bottom-8 left-1/4 z-40 bg-[#161b26]/95 border border-orange-500/30 rounded-2xl px-4 py-2.5 shadow-2xl backdrop-blur-xl flex items-center gap-3 hidden sm:flex"
             >
               <div className="h-8 w-8 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-400">
                 <UtensilsCrossed className="h-4 w-4 text-orange-400" />
@@ -472,17 +472,6 @@ export default function Hero() {
                 </div>
               </div>
             </motion.div>
-
-            {/* Bottom Right Handwritten Cursive Callout with Arrow */}
-            <div className="absolute -bottom-20 right-0 z-40 hidden xl:flex flex-col items-end">
-              <span className="font-handwriting text-2xl text-amber-300 font-bold max-w-[200px] text-right leading-tight drop-shadow-md">
-                More Tables Happier Customers Higher Revenue
-              </span>
-              <svg className="w-16 h-12 text-amber-400 -mt-2 -mr-4 transform rotate-12" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3">
-                <path d="M20,20 Q60,10 80,70" strokeLinecap="round" />
-                <path d="M70,60 L80,70 L90,55" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
 
           </div>
 

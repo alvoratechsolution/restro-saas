@@ -352,34 +352,34 @@ export default function OrdersPage() {
   const tabs: Array<Order["status"] | "All"> = ["All", "Pending", "Preparing", "Ready", "Completed", "Cancelled"];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
-            <ShoppingBag className="text-orange-500 h-8 w-8" />
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <ShoppingBag className="text-orange-500 h-6 w-6" />
             Live Order Monitor
           </h1>
-          <p className="text-slate-400 mt-1">Real-time KDS line with waiter alerts and transaction logs.</p>
+          <p className="text-slate-500 mt-0.5 text-xs font-medium">Real-time KDS line with waiter alerts and transaction logs.</p>
         </div>
-        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 shrink-0">
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3.5 py-1.5 shadow-xs shrink-0">
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-          <span className="text-xs font-semibold text-slate-300">Live Socket Connected</span>
+          <span className="text-xs font-bold text-slate-700">Live Socket Connected</span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-900 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200/80 pb-3">
         {tabs.map((tab) => {
           const isActive = activeTab === tab;
           return (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-150 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer ${
                 isActive
-                  ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/10"
-                  : "bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-850"
+                  ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm"
+                  : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 shadow-xs"
               }`}
             >
               {tab}
@@ -395,41 +395,41 @@ export default function OrdersPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {orders.length === 0 ? (
-            <div className="md:col-span-3 text-center py-20 bg-slate-900/10 border border-slate-850/60 rounded-2xl">
-              <ShoppingBag className="h-12 w-12 text-slate-700 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">No orders found in this section.</p>
+            <div className="md:col-span-3 text-center py-16 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+              <ShoppingBag className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-slate-500 text-xs font-medium">No orders found in this section.</p>
             </div>
           ) : (
             orders.map((order) => (
               <Card
                 key={order._id}
-                className={`bg-slate-900/20 border backdrop-blur-xl flex flex-col justify-between overflow-hidden shadow-lg ${
+                className={`bg-white border rounded-2xl flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 ${
                   order.status === "Pending"
-                    ? "border-orange-500/20 shadow-orange-500/5 animate-pulse-subtle"
-                    : "border-slate-800"
+                    ? "border-orange-300 ring-2 ring-orange-500/10"
+                    : "border-slate-200/80"
                 }`}
               >
                 {/* Header info */}
-                <div className="p-5 border-b border-slate-900 bg-slate-950/20 flex justify-between items-center">
+                <div className="p-4 border-b border-slate-100 bg-slate-50/70 flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-base font-black text-slate-900">
                       Table {order.tableId?.tableNumber || "T-N/A"}
                     </h3>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
                       ID: #{order._id.slice(-6).toUpperCase()} • {new Date(order.createdAt).toLocaleTimeString()}
                     </p>
                   </div>
                   <span
                     className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                       order.status === "Pending"
-                        ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                        ? "bg-orange-50 text-orange-700 border-orange-200"
                         : order.status === "Preparing"
-                        ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
                         : order.status === "Ready"
-                        ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
                         : order.status === "Completed"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-red-500/10 text-red-400 border-red-500/20"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-red-50 text-red-700 border-red-200"
                     }`}
                   >
                     {order.status}
@@ -437,11 +437,11 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Items */}
-                <div className="p-5 flex-1 space-y-3 max-h-60 overflow-y-auto">
+                <div className="p-4 flex-1 space-y-2.5 max-h-60 overflow-y-auto">
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-start gap-4">
+                    <div key={idx} className="flex justify-between items-start gap-3">
                       <div className="text-xs">
-                        <p className="font-bold text-slate-200">
+                        <p className="font-bold text-slate-800">
                           {item.quantity}x {item.name}
                         </p>
                         {item.selectedVariant && (
@@ -450,12 +450,12 @@ export default function OrdersPage() {
                           </p>
                         )}
                         {item.selectedAddons?.length > 0 && (
-                          <p className="text-[10px] text-orange-500/80 font-semibold mt-0.5">
+                          <p className="text-[10px] text-orange-600 font-semibold mt-0.5">
                             + {item.selectedAddons.map((a) => a.name).join(", ")}
                           </p>
                         )}
                       </div>
-                      <span className="text-xs font-bold text-slate-400 shrink-0">
+                      <span className="text-xs font-black text-slate-700 shrink-0">
                         ₹{item.price * item.quantity}
                       </span>
                     </div>
@@ -463,45 +463,45 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Totals & Payments */}
-                <div className="p-5 border-t border-slate-900 bg-slate-950/20 space-y-3.5">
+                <div className="p-4 border-t border-slate-100 bg-slate-50/50 space-y-3">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Payment:</span>
-                    <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-medium">Payment:</span>
+                    <div className="flex items-center gap-1.5">
                       <span
-                        className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                        className={`font-bold px-2 py-0.5 rounded-md text-[10px] border ${
                           order.paymentStatus === "Paid"
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-red-500/10 text-red-400"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-red-50 text-red-700 border-red-200"
                         }`}
                       >
                         {order.paymentStatus}
                       </span>
-                      <span className="text-slate-500">via {order.paymentMethod}</span>
+                      <span className="text-slate-500 text-[11px]">via {order.paymentMethod}</span>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-baseline">
-                    <span className="text-sm font-semibold text-slate-400">Total Bill:</span>
-                    <span className="text-xl font-black text-white">₹{order.total}</span>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Bill:</span>
+                    <span className="text-xl font-black text-slate-900">₹{order.total}</span>
                   </div>
 
                   {/* Actions buttons */}
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-900/60 justify-end">
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-200/60 justify-end">
                     <Button
                       size="sm"
                       onClick={() => handlePrintReceipt(order)}
-                      className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 text-[11px] px-3.5 py-1.5 h-auto flex items-center gap-1"
+                      className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-semibold px-2.5 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
                     >
-                      <Printer className="h-3.5 w-3.5" />
+                      <Printer className="h-3 w-3 text-slate-500" />
                       Print Bill
                     </Button>
                     {order.status === "Pending" && (
                       <Button
                         size="sm"
                         onClick={() => handleUpdateStatus(order._id, "Preparing")}
-                        className="bg-orange-600 hover:bg-orange-700 text-white font-semibold text-[11px] px-3.5 py-1.5 h-auto flex items-center gap-1"
+                        className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] px-3 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
                       >
-                        <Clock className="h-3.5 w-3.5" />
+                        <Clock className="h-3 w-3" />
                         Prepare
                       </Button>
                     )}
@@ -510,9 +510,9 @@ export default function OrdersPage() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdateStatus(order._id, "Ready")}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] px-3.5 py-1.5 h-auto flex items-center gap-1"
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] px-3 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
                       >
-                        <Utensils className="h-3.5 w-3.5" />
+                        <Utensils className="h-3 w-3" />
                         Ready
                       </Button>
                     )}
@@ -521,9 +521,9 @@ export default function OrdersPage() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdateStatus(order._id, "Completed")}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] px-3.5 py-1.5 h-auto flex items-center gap-1"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <CheckCircle2 className="h-3 w-3" />
                         Complete
                       </Button>
                     )}
@@ -532,9 +532,9 @@ export default function OrdersPage() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdateStatus(order._id, "Cancelled")}
-                        className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-red-500 text-[11px] px-3.5 py-1.5 h-auto flex items-center gap-1"
+                        className="bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 text-[11px] font-semibold px-2.5 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
                       >
-                        <Ban className="h-3.5 w-3.5" />
+                        <Ban className="h-3 w-3" />
                         Cancel
                       </Button>
                     )}
@@ -543,9 +543,9 @@ export default function OrdersPage() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdatePayment(order._id, "Paid")}
-                        className="bg-slate-900 border border-slate-800 hover:bg-slate-850 text-emerald-400 text-[11px] px-3.5 py-1.5 h-auto flex items-center gap-1"
+                        className="bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
                       >
-                        <DollarSign className="h-3.5 w-3.5" />
+                        <DollarSign className="h-3 w-3" />
                         Mark Paid
                       </Button>
                     )}

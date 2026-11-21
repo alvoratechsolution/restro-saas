@@ -86,10 +86,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Branch Settings</h1>
-        <p className="text-slate-400 mt-1">Configure localized tax percentages, receipts billing structure, and terminal helpers.</p>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Branch Settings</h1>
+        <p className="text-slate-500 mt-0.5 text-xs font-medium">Configure localized tax percentages, receipts billing structure, and terminal helpers.</p>
       </div>
 
       {isLoading ? (
@@ -97,11 +97,11 @@ export default function SettingsPage() {
           <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+        <form onSubmit={handleSubmit} className="max-w-3xl space-y-5">
           {/* Card 1: Localisation & Currency */}
-          <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl space-y-5">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-orange-500" />
+          <Card className="p-6 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <DollarSign className="h-4.5 w-4.5 text-orange-500" />
               Currency & Localisation
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,9 +121,9 @@ export default function SettingsPage() {
           </Card>
 
           {/* Card 2: Taxes & Service Charges */}
-          <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl space-y-5">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-orange-500" />
+          <Card className="p-6 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <Sparkles className="h-4.5 w-4.5 text-orange-500" />
               Taxes & Charges
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -161,25 +161,25 @@ export default function SettingsPage() {
           </Card>
 
           {/* Card 3: Operation Features */}
-          <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl space-y-5">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <BellRing className="h-5 w-5 text-orange-500" />
+          <Card className="p-6 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <BellRing className="h-4.5 w-4.5 text-orange-500" />
               Terminal Operational Flags
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   id="soundCheck"
                   checked={enableSoundAlerts}
                   onChange={(e) => setEnableSoundAlerts(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-800 text-orange-500 focus:ring-orange-500/20 h-4 w-4"
+                  className="rounded border-slate-300 text-orange-500 focus:ring-orange-500/20 h-4 w-4 cursor-pointer"
                 />
                 <div>
-                  <label htmlFor="soundCheck" className="text-sm font-semibold text-slate-200 cursor-pointer">
+                  <label htmlFor="soundCheck" className="text-sm font-bold text-slate-800 cursor-pointer">
                     Enable Sound Alerts
                   </label>
-                  <p className="text-[10px] text-slate-500">Waiter call and new order alerts play sound triggers on staff screens.</p>
+                  <p className="text-[11px] text-slate-500">Waiter call and new order alerts play sound triggers on staff screens.</p>
                 </div>
               </div>
 
@@ -189,22 +189,22 @@ export default function SettingsPage() {
                   id="helperCheck"
                   checked={tableCallOption}
                   onChange={(e) => setTableCallOption(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-800 text-orange-500 focus:ring-orange-500/20 h-4 w-4"
+                  className="rounded border-slate-300 text-orange-500 focus:ring-orange-500/20 h-4 w-4 cursor-pointer"
                 />
                 <div>
-                  <label htmlFor="helperCheck" className="text-sm font-semibold text-slate-200 cursor-pointer">
+                  <label htmlFor="helperCheck" className="text-sm font-bold text-slate-800 cursor-pointer">
                     Allow &apos;Call Waiter&apos; assistance
                   </label>
-                  <p className="text-[10px] text-slate-500">Customers can trigger waiters request flags directly from their QR scanned menus.</p>
+                  <p className="text-[11px] text-slate-500">Customers can trigger waiters request flags directly from their QR scanned menus.</p>
                 </div>
               </div>
             </div>
           </Card>
 
           {/* Card 4: Printer settings */}
-          <Card className="p-6 bg-slate-900/30 border border-slate-800 backdrop-blur-xl space-y-5">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Printer className="h-5 w-5 text-orange-500" />
+          <Card className="p-6 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
+            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <Printer className="h-4.5 w-4.5 text-orange-500" />
               Thermal Bill Print Layout
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,16 +222,16 @@ export default function SettingsPage() {
           </Card>
 
           {/* Submit Action */}
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-2">
             <Button
               type="submit"
               disabled={updateMutation.isPending}
-              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2 py-3 px-8 shadow-lg shadow-orange-500/10"
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow-sm flex items-center gap-2 cursor-pointer"
             >
               {updateMutation.isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="h-5 w-5" />
+                <Save className="h-4 w-4" />
               )}
               Save Branch Settings
             </Button>
