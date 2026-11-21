@@ -6,6 +6,17 @@ const Restaurant = require("../models/Restaurant");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Lead = require("../models/Lead");
 const User = require("../models/User");
+const Branch = require("../models/Branch");
+const Table = require("../models/Table");
+const Category = require("../models/Category");
+const MenuItem = require("../models/MenuItem");
+const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
+const Settings = require("../models/Settings");
+const Theme = require("../models/Theme");
+const Notification = require("../models/Notification");
+const Coupon = require("../models/Coupon");
+const QRCode = require("../models/QRCode");
 const { sendWelcomeRegistrationEmail, isSmtpConfigured } = require("../services/email");
 
 
@@ -115,6 +126,70 @@ router.get("/smtp-status", (req, res) => {
       ? "SMTP service is active."
       : "SMTP is not yet configured. Please add your real Gmail and 16-digit App Password to SMTP_USER and SMTP_PASS in backend/.env.",
   });
+});
+
+// Delete a restaurant tenant and all associated data
+router.delete("/restaurants/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant tenant not found" });
+    }
+
+    // Cascade delete all associated collections for this restaurant
+    await Promise.all([
+      User.deleteMany({ restaurantId: id }),
+      Branch.deleteMany({ restaurantId: id }),
+      Table.deleteMany({ restaurantId: id }),
+      Category.deleteMany({ restaurantId: id }),
+      MenuItem.deleteMany({ restaurantId: id }),
+      Order.deleteMany({ restaurantId: id }),
+      OrderItem.deleteMany({ restaurantId: id }),
+      Settings.deleteMany({ restaurantId: id }),
+      Theme.deleteMany({ restaurantId: id }),
+      Notification.deleteMany({ restaurantId: id }),
+      Coupon.deleteMany({ restaurantId: id }),
+      QRCode.deleteMany({ restaurantId: id }),
+      Restaurant.findByIdAndDelete(id),
+    ]);
+
+    return res.json({
+      success: true,
+      message: `Restaurant '${restaurant.name}' and all its accounts have been permanently deleted.`,
+    });
+  } catch (error) {
+    console.error("Delete restaurant error:", error);
+    return res.status(500).json({ error: error.message || "Failed to delete restaurant" });
+  }
+});
+
+// Clear all test restaurants (Leaves Super Admin untouched)
+router.post("/restaurants/clear-all", async (req, res) => {
+  try {
+    await Promise.all([
+      Restaurant.deleteMany({}),
+      User.deleteMany({ role: { $ne: "SUPER_ADMIN" } }),
+      Branch.deleteMany({}),
+      Table.deleteMany({}),
+      Category.deleteMany({}),
+      MenuItem.deleteMany({}),
+      Order.deleteMany({}),
+      OrderItem.deleteMany({}),
+      Settings.deleteMany({}),
+      Theme.deleteMany({}),
+      Notification.deleteMany({}),
+      Coupon.deleteMany({}),
+      QRCode.deleteMany({}),
+    ]);
+    return res.json({
+      success: true,
+      message: "All restaurant tenants and accounts have been cleared. Super Admin remains intact.",
+    });
+  } catch (error) {
+    console.error("Clear all restaurants error:", error);
+    return res.status(500).json({ error: "Failed to clear restaurants" });
+  }
 });
 
 // 2. SUBSCRIPTION PLANS

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
 import { BACKEND_URL } from "@/lib/config";
-import { Store, Globe, Calendar, CheckCircle, AlertTriangle, Loader2, Plus, X, ShieldCheck, ChefHat, Users, Mail } from "lucide-react";
+import { Store, Globe, Calendar, CheckCircle, AlertTriangle, Loader2, Plus, X, ShieldCheck, ChefHat, Users, Mail, Trash2 } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -150,6 +150,46 @@ export default function RestaurantsPage() {
     });
   };
 
+  const deleteRestaurantMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiFetch(`/api/super-admin/restaurants/${id}`, {
+        method: "DELETE",
+      }),
+    onSuccess: (res) => {
+      toast.success(res.message || "Restaurant tenant deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["super-admin", "restaurants"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete restaurant");
+    },
+  });
+
+  const handleDeleteRestaurant = (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete "${name}"? All associated admin accounts, branches, tables, menu items, and orders will be removed.`)) {
+      deleteRestaurantMutation.mutate(id);
+    }
+  };
+
+  const clearAllMutation = useMutation({
+    mutationFn: () =>
+      apiFetch("/api/super-admin/restaurants/clear-all", {
+        method: "POST",
+      }),
+    onSuccess: (res) => {
+      toast.success(res.message || "All restaurant entries cleared!");
+      queryClient.invalidateQueries({ queryKey: ["super-admin", "restaurants"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to clear restaurants");
+    },
+  });
+
+  const handleClearAll = () => {
+    if (window.confirm("Are you sure you want to delete ALL restaurant entries? Only the Super Admin system account will remain.")) {
+      clearAllMutation.mutate();
+    }
+  };
+
   const handleResendCredentials = async (restId: string, email: string) => {
     setResendingId(restId);
     try {
@@ -280,13 +320,25 @@ export default function RestaurantsPage() {
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Manage Tenants</h1>
           <p className="text-slate-500 text-sm mt-1">Supervise multi-tenant restaurant nodes, active domain mappings, and suspend access.</p>
         </div>
-        <Button
-          onClick={() => setShowAddModal(true)}
-          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10 cursor-pointer"
-        >
-          <Plus className="h-4 w-4" />
-          Add Restaurant
-        </Button>
+        <div className="flex items-center gap-2">
+          {restaurants.length > 0 && (
+            <Button
+              onClick={handleClearAll}
+              disabled={clearAllMutation.isPending}
+              className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold flex items-center gap-1.5 text-xs shadow-2xs cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Clear All Entries
+            </Button>
+          )}
+          <Button
+            onClick={() => setShowAddModal(true)}
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Add Restaurant
+          </Button>
+        </div>
       </div>
 
       {/* SMTP Notice Banner if unconfigured */}
@@ -564,12 +616,21 @@ export default function RestaurantsPage() {
                           className={`${
                             rest.isSuspended
                               ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
-                              : "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                          } text-xs font-semibold px-3 py-1.5`}
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                          } text-xs font-semibold px-2.5 py-1.5`}
                           onClick={() => handleToggleSuspend(rest._id, rest.isSuspended)}
                         >
                           {rest.isSuspended ? "Unsuspend" : "Suspend"}
                         </Button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRestaurant(rest._id, rest.name)}
+                          disabled={deleteRestaurantMutation.isPending}
+                          title="Delete restaurant and all its accounts"
+                          className="px-2 py-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 border border-slate-200/80 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center shadow-2xs"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        </button>
                       </td>
                     </tr>
                   ))
