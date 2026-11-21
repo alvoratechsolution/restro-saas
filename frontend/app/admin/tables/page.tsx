@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import apiFetch from "@/lib/api";
 import {
   Plus,
@@ -37,6 +38,7 @@ interface QRCode {
 
 export default function TablesPage() {
   const queryClient = useQueryClient();
+  const { status } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [tableNumber, setTableNumber] = useState("");
   const [seatingCapacity, setSeatingCapacity] = useState(2);
@@ -51,6 +53,7 @@ export default function TablesPage() {
   }>({
     queryKey: ["admin", "tables"],
     queryFn: () => apiFetch("/api/admin/tables"),
+    enabled: status === "authenticated",
   });
 
   const rawTables = response?.tables || [];
@@ -586,18 +589,19 @@ export default function TablesPage() {
             Download All Scanners
           </Button>
 
-          <Button
+          <button
+            type="button"
             onClick={() => regenerateMutation.mutate()}
             disabled={regenerateMutation.isPending}
-            className="bg-white hover:bg-slate-50 text-slate-700 font-semibold border border-slate-200 flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer shadow-xs"
+            className="bg-white hover:bg-slate-50 text-slate-700 font-bold border border-slate-200 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs active:scale-95 transition-all cursor-pointer shadow-xs disabled:opacity-60"
           >
             {regenerateMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4 text-orange-500" />
+              <RefreshCw className="h-3.5 w-3.5 text-orange-500" />
             )}
-            Sync QR Domain
-          </Button>
+            <span>Sync QR Domain</span>
+          </button>
 
           <Button
             onClick={() => setShowModal(true)}
@@ -654,21 +658,21 @@ export default function TablesPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-1 w-full pt-3 border-t border-slate-100">
+                <div className="mt-4 grid grid-cols-3 gap-1.5 w-full pt-3 border-t border-slate-100">
                   {qr?.qrCodeUrl ? (
                     <>
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => setViewingTable({ number: table.tableNumber, qrUrl: qr.qrCodeUrl })}
-                        className="bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer"
                         title="View QR Code"
                       >
-                        <Eye className="h-3 w-3" />
-                        View
-                      </Button>
+                        <Eye className="h-3 w-3 text-slate-500" />
+                        <span>View</span>
+                      </button>
 
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() =>
                           downloadStandImage(
                             response?.restaurant?.name || "Our Restaurant",
@@ -676,25 +680,25 @@ export default function TablesPage() {
                             qr.qrCodeUrl
                           )
                         }
-                        className="bg-emerald-600/90 hover:bg-emerald-600 text-white text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
-                        title="Download Scanner Card Graphic"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all shadow-xs cursor-pointer"
+                        title="Download Scanner Stand Graphic"
                       >
                         <Download className="h-3 w-3" />
-                        Download
-                      </Button>
+                        <span>Save</span>
+                      </button>
 
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handlePrint(qr.qrCodeUrl, table.tableNumber)}
-                        className="bg-orange-600 hover:bg-orange-700 text-white text-[11px] px-2 py-1 flex items-center justify-center gap-1 flex-1 cursor-pointer"
+                        className="bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold py-1.5 px-1 rounded-lg flex items-center justify-center gap-1 transition-all shadow-xs cursor-pointer"
                         title="Print Table Sign"
                       >
                         <Printer className="h-3 w-3" />
-                        Print
-                      </Button>
+                        <span>Print</span>
+                      </button>
                     </>
                   ) : (
-                    <span className="text-[10px] text-slate-400 py-1">QR pending</span>
+                    <span className="col-span-3 text-[10px] text-slate-400 py-1 text-center">QR pending</span>
                   )}
                 </div>
               </Card>

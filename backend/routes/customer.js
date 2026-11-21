@@ -193,10 +193,10 @@ router.post("/orders", async (req, res) => {
     }
 
     const taxableAmount = Math.max(0, subtotal - discount);
-    const cgst = hasGstBilling ? (taxableAmount * cgstRate) / 100 : 0;
-    const sgst = hasGstBilling ? (taxableAmount * sgstRate) / 100 : 0;
+    const cgst = hasGstBilling ? Math.round((taxableAmount * cgstRate) / 100) : 0;
+    const sgst = hasGstBilling ? Math.round((taxableAmount * sgstRate) / 100) : 0;
     const serviceCharge = 0; // Removed Service Charge for now
-    const total = taxableAmount + cgst + sgst + serviceCharge;
+    const total = Math.round(taxableAmount + cgst + sgst + serviceCharge);
 
     const order = new Order({
       restaurantId,

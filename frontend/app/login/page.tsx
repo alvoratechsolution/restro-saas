@@ -38,6 +38,12 @@ export default function LoginPage() {
         // Fetch session to determine role-based redirect
         const res = await fetch("/api/auth/session");
         const session = await res.json();
+
+        if (session?.user?.token) {
+          try {
+            localStorage.setItem("restro_auth_token", session.user.token);
+          } catch {}
+        }
         
         const role = session?.user?.role;
         if (role === "SUPER_ADMIN") {

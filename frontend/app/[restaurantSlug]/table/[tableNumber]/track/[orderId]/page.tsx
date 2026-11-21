@@ -388,7 +388,7 @@ export default function OrderTrackingPage({
                       </p>
                     )}
                   </div>
-                  <span className="font-extrabold text-slate-900 shrink-0">₹{item.price * item.quantity}</span>
+                  <span className="font-extrabold text-slate-900 shrink-0">₹{Math.round(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
@@ -397,17 +397,17 @@ export default function OrderTrackingPage({
             <div className="text-xs space-y-2 pt-3.5 text-slate-600">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-extrabold text-slate-900">₹{order.subtotal}</span>
+                <span className="font-extrabold text-slate-900">₹{Math.round(order.subtotal)}</span>
               </div>
               {order.cgst > 0 && (
                 <div className="flex justify-between">
                   <span>Taxes (5% GST):</span>
-                  <span className="font-extrabold text-slate-900">₹{(order.cgst + order.sgst).toFixed(1)}</span>
+                  <span className="font-extrabold text-slate-900">₹{Math.round(order.cgst + order.sgst)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm font-black text-slate-900 pt-2.5 border-t border-slate-200">
                 <span>Total Amount paid:</span>
-                <span className="text-orange-600">₹{order.total.toFixed(0)}</span>
+                <span className="text-orange-600">₹{Math.round(order.total)}</span>
               </div>
             </div>
           </div>

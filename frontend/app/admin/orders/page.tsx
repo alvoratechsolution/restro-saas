@@ -171,8 +171,8 @@ export default function OrdersPage() {
             ${variantText}
             ${addonsText}
           </td>
-          <td class="item-price-cell">₹${item.price}</td>
-          <td class="item-total-cell">₹${item.price * item.quantity}</td>
+          <td class="item-price-cell">₹${Math.round(item.price)}</td>
+          <td class="item-total-cell">₹${Math.round(item.price * item.quantity)}</td>
         </tr>
       `;
     });
@@ -181,7 +181,7 @@ export default function OrdersPage() {
       ? `
         <div class="summary-row">
           <span>Discount:</span>
-          <span>- ₹${order.subtotal - order.total}</span>
+          <span>- ₹${Math.round(order.subtotal - order.total)}</span>
         </div>
       `
       : "";
@@ -319,12 +319,12 @@ export default function OrdersPage() {
           <div class="summary-section">
             <div class="summary-row">
               <span>Subtotal:</span>
-              <span>₹${order.subtotal}</span>
+              <span>₹${Math.round(order.subtotal)}</span>
             </div>
             ${discountRow}
             <div class="summary-row total-row">
               <span>TOTAL DUE:</span>
-              <span>₹${order.total}</span>
+              <span>₹${Math.round(order.total)}</span>
             </div>
           </div>
           <div class="divider"></div>
@@ -456,7 +456,7 @@ export default function OrdersPage() {
                         )}
                       </div>
                       <span className="text-xs font-black text-slate-700 shrink-0">
-                        ₹{item.price * item.quantity}
+                        ₹{Math.round(item.price * item.quantity)}
                       </span>
                     </div>
                   ))}
@@ -482,72 +482,74 @@ export default function OrdersPage() {
 
                   <div className="flex justify-between items-baseline">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Bill:</span>
-                    <span className="text-xl font-black text-slate-900">₹{order.total}</span>
+                    <span className="text-2xl font-black text-slate-900 tracking-tight">₹{Math.round(order.total)}</span>
                   </div>
 
                   {/* Actions buttons */}
-                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-200/60 justify-end">
-                    <Button
-                      size="sm"
+                  <div className="flex flex-wrap gap-2 pt-2.5 border-t border-slate-200/80 justify-end items-center">
+                    <button
+                      type="button"
                       onClick={() => handlePrintReceipt(order)}
-                      className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-semibold px-2.5 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
+                      className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                      title="Print Bill"
                     >
-                      <Printer className="h-3 w-3 text-slate-500" />
-                      Print Bill
-                    </Button>
+                      <Printer className="h-3.5 w-3.5 text-slate-600" />
+                      <span>Print Bill</span>
+                    </button>
+
                     {order.status === "Pending" && (
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handleUpdateStatus(order._id, "Preparing")}
-                        className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] px-3 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                       >
-                        <Clock className="h-3 w-3" />
-                        Prepare
-                      </Button>
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>Prepare</span>
+                      </button>
                     )}
 
                     {order.status === "Preparing" && (
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handleUpdateStatus(order._id, "Ready")}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] px-3 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
+                        className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                       >
-                        <Utensils className="h-3 w-3" />
-                        Ready
-                      </Button>
+                        <Utensils className="h-3.5 w-3.5" />
+                        <span>Ready</span>
+                      </button>
                     )}
 
                     {order.status === "Ready" && (
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handleUpdateStatus(order._id, "Completed")}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                       >
-                        <CheckCircle2 className="h-3 w-3" />
-                        Complete
-                      </Button>
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>Complete</span>
+                      </button>
                     )}
 
                     {order.status !== "Completed" && order.status !== "Cancelled" && (
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handleUpdateStatus(order._id, "Cancelled")}
-                        className="bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 text-[11px] font-semibold px-2.5 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
+                        className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
                       >
-                        <Ban className="h-3 w-3" />
-                        Cancel
-                      </Button>
+                        <Ban className="h-3.5 w-3.5 text-rose-600" />
+                        <span>Cancel</span>
+                      </button>
                     )}
 
                     {order.paymentStatus !== "Paid" && (
-                      <Button
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handleUpdatePayment(order._id, "Paid")}
-                        className="bg-white border border-emerald-200 hover:bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2.5 py-1.5 h-auto flex items-center gap-1 shadow-xs cursor-pointer"
+                        className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer"
                       >
-                        <DollarSign className="h-3 w-3" />
-                        Mark Paid
-                      </Button>
+                        <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>Mark Paid</span>
+                      </button>
                     )}
                   </div>
                 </div>

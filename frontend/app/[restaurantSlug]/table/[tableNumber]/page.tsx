@@ -1179,29 +1179,29 @@ export default function TableOrderingPage({
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between items-center text-slate-600">
                   <span>Subtotal:</span>
-                  <span className="font-black text-slate-900">₹{subtotal}</span>
+                  <span className="font-black text-slate-900">₹{Math.round(subtotal)}</span>
                 </div>
                 {coupon && (
                   <div className="flex justify-between items-center text-emerald-600 font-bold">
                     <span>Coupon Discount:</span>
-                    <span>- ₹{discount}</span>
+                    <span>- ₹{Math.round(discount)}</span>
                   </div>
                 )}
                 {cgst > 0 && (
                   <div className="flex justify-between items-center text-slate-600">
                     <span>CGST ({cgstRate}%):</span>
-                    <span className="font-black text-slate-900">₹{cgst.toFixed(1)}</span>
+                    <span className="font-black text-slate-900">₹{Math.round(cgst)}</span>
                   </div>
                 )}
                 {sgst > 0 && (
                   <div className="flex justify-between items-center text-slate-600">
                     <span>SGST ({sgstRate}%):</span>
-                    <span className="font-black text-slate-900">₹{sgst.toFixed(1)}</span>
+                    <span className="font-black text-slate-900">₹{Math.round(sgst)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
                   <span>Total Payable:</span>
-                  <span className="text-base text-orange-600">₹{total.toFixed(0)}</span>
+                  <span className="text-base text-orange-600">₹{Math.round(total)}</span>
                 </div>
               </div>
 
@@ -1223,7 +1223,7 @@ export default function TableOrderingPage({
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
-                    Confirm & Send Order (₹{total.toFixed(0)})
+                    Confirm & Send Order (₹{Math.round(total)})
                   </>
                 )}
               </Button>

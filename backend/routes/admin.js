@@ -44,15 +44,15 @@ router.get("/dashboard", async (req, res) => {
     });
 
     const todayCount = todayOrders.length;
-    const todayRevenue = todayOrders
+    const todayRevenue = Math.round(todayOrders
       .filter(o => o.paymentStatus === "Paid" || o.status === "Completed")
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + (o.total || 0), 0));
 
     const allTimeOrders = await Order.find({ restaurantId: restroObjectId });
     const totalOrders = allTimeOrders.length;
-    const totalRevenue = allTimeOrders
+    const totalRevenue = Math.round(allTimeOrders
       .filter(o => o.paymentStatus === "Paid" || o.status === "Completed")
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + (o.total || 0), 0));
 
     const completedOrders = allTimeOrders.filter(o => o.status === "Completed").length;
     const cancelledOrders = allTimeOrders.filter(o => o.status === "Cancelled").length;

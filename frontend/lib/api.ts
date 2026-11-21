@@ -2,8 +2,31 @@ import { getSession } from "next-auth/react";
 import { BACKEND_URL } from "./config";
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const session = await getSession();
-  const token = (session as any)?.user?.token;
+  let session = await getSession();
+  let token = (session as any)?.user?.token;
+
+  // Client-side fallback: check localStorage or retry getSession after brief hydration delay
+  if (!token && typeof window !== "undefined") {
+    try {
+      const cached = localStorage.getItem("restro_auth_token");
+      if (cached) {
+        token = cached;
+      }
+    } catch {}
+
+    if (!token) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      session = await getSession();
+      token = (session as any)?.user?.token;
+    }
+  }
+
+  // Cache token if available
+  if (token && typeof window !== "undefined") {
+    try {
+      localStorage.setItem("restro_auth_token", token);
+    } catch {}
+  }
 
   const headers = new Headers(options.headers || {});
   
@@ -21,9 +44,14 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     headers,
   });
 
-  const result = await response.json();
+  const result = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(result.error || "API request failed");
+    if (response.status === 401 && typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("restro_auth_token");
+      } catch {}
+    }
+    throw new Error(result.error || result.message || "API request failed");
   }
 
   return result;

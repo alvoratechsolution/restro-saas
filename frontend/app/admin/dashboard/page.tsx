@@ -84,7 +84,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Today&apos;s Revenue</p>
                   <p className="text-3xl font-black text-slate-900 mt-2 tracking-tight">
-                    ₹{metrics.todayRevenue.toLocaleString()}
+                    ₹{Math.round(metrics.todayRevenue).toLocaleString()}
                   </p>
                   <p className="text-[11px] font-bold text-emerald-600 mt-2 flex items-center gap-1">
                     <ArrowUpRight className="h-3.5 w-3.5" /> Live daily billing
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Sales (All Time)</p>
                   <p className="text-3xl font-black text-emerald-600 mt-2 tracking-tight">
-                    ₹{metrics.totalRevenue.toLocaleString()}
+                    ₹{Math.round(metrics.totalRevenue).toLocaleString()}
                   </p>
                   <p className="text-[11px] font-bold text-emerald-600 mt-2 flex items-center gap-1">
                     ↑ Lifetime platform GMV
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
                             <p className="text-[11px] font-medium text-slate-500">Qty: {item.totalQty} sold</p>
                           </div>
                         </div>
-                        <p className="text-sm font-black text-slate-900">₹{item.totalSales}</p>
+                        <p className="text-sm font-black text-slate-900">₹{Math.round(item.totalSales).toLocaleString()}</p>
                       </div>
                     ))
                   )}
