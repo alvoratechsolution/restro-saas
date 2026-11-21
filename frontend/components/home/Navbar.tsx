@@ -28,15 +28,16 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 via-amber-500 to-indigo-500 text-white font-black text-xl shadow-lg shadow-orange-500/25 group-hover:scale-105 transition-transform">
-            S
+          <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-orange-500/25 group-hover:scale-105 transition-transform bg-slate-900 border border-orange-500/30">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="ServeDesk Logo" className="h-full w-full object-cover" />
           </div>
           <div>
             <span className="font-extrabold text-white text-xl tracking-tight block">
               Serve<span className="text-orange-500">Desk</span>
             </span>
             <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest block -mt-1">
-              Dining OS
+              Dining OS · By Alvora Tech
             </span>
           </div>
         </Link>

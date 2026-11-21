@@ -11,12 +11,18 @@ export default function Footer() {
         {/* Col 1: Brand info */}
         <div className="space-y-4 md:col-span-1">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-black text-lg shadow-md shadow-orange-500/20">
-              S
+            <div className="h-9 w-9 rounded-xl overflow-hidden shadow-md shadow-orange-500/20 bg-slate-900 border border-orange-500/30">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
             </div>
-            <span className="font-extrabold text-slate-900 text-lg tracking-tight">
-              Serve<span className="text-orange-600">Desk</span>
-            </span>
+            <div>
+              <span className="font-extrabold text-slate-900 text-lg tracking-tight block">
+                Serve<span className="text-orange-600">Desk</span>
+              </span>
+              <span className="text-[9px] font-bold text-slate-400 block -mt-0.5">
+                Powered by Alvora Tech Solution
+              </span>
+            </div>
           </Link>
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
             The multi-tenant dining operating system for contactless QR ordering, real-time Kitchen KDS lines, and floor waiter management.
@@ -101,7 +107,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
-        <p>© {new Date().getFullYear()} ServeDesk Platform. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} ServeDesk Platform · Powered by Alvora Tech Solution. All rights reserved.</p>
         <p className="flex items-center gap-1">
           Designed with <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" /> for modern hospitality.
         </p>

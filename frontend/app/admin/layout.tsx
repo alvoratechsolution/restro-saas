@@ -186,12 +186,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-64 border-r border-slate-800/80 bg-[#0d111c]/90 backdrop-blur-xl p-6 shrink-0 shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-black text-xl shadow-lg shadow-orange-500/25">
-            R
+          <div className="h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-orange-500/25 bg-slate-900 border border-orange-500/30 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
           </div>
-          <div>
-            <h1 className="font-extrabold text-white text-lg tracking-tight truncate max-w-[150px]">{restaurantName}</h1>
-            <p className="text-[10px] text-orange-400 font-extrabold uppercase tracking-wider">Tenant Node</p>
+          <div className="overflow-hidden">
+            <h1 className="font-extrabold text-white text-base tracking-tight truncate max-w-[150px]">{restaurantName}</h1>
+            <p className="text-[9px] text-orange-400 font-bold uppercase tracking-wider truncate">ServeDesk · Alvora Tech</p>
           </div>
         </div>
 
@@ -239,10 +240,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-[#0d111c]/90 backdrop-blur-xl z-20 shadow-md">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-bold text-lg shadow-sm">
-            R
+          <div className="h-8 w-8 rounded-lg overflow-hidden shadow-sm bg-slate-900 border border-orange-500/30 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
           </div>
-          <span className="font-extrabold text-white text-base tracking-tight">{restaurantName}</span>
+          <span className="font-extrabold text-white text-base tracking-tight truncate max-w-[200px]">{restaurantName}</span>
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

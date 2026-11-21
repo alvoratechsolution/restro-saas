@@ -202,8 +202,9 @@ export default function Hero() {
               {/* Tablet Header Bar */}
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-orange-500 flex items-center justify-center font-black text-white text-xs">
-                    S
+                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-slate-900 border border-orange-500/40">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
                   </div>
                   <div>
                     <span className="font-extrabold text-white text-sm">Serve<span className="text-orange-500">Desk</span></span>
@@ -324,8 +325,11 @@ export default function Hero() {
               transition={{ duration: 0.7, delay: 0.6 }}
               className="absolute -bottom-6 -left-2 sm:-left-6 z-20 w-32 sm:w-36 bg-gradient-to-b from-[#181d2a] to-[#0a0d14] border border-amber-500/30 rounded-2xl p-2.5 shadow-2xl backdrop-blur-xl text-center space-y-2"
             >
-              <div className="flex items-center justify-center gap-1">
-                <div className="h-4 w-4 rounded bg-orange-500 flex items-center justify-center text-white font-black text-[9px]">S</div>
+              <div className="flex items-center justify-center gap-1.5">
+                <div className="h-4 w-4 rounded overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
+                </div>
                 <span className="font-bold text-white text-[11px]">Serve<span className="text-orange-500">Desk</span></span>
               </div>
 
@@ -363,7 +367,10 @@ export default function Hero() {
                   <rect x="84" y="84" width="8" height="8" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="bg-orange-500 text-white font-black text-[9px] px-1 rounded shadow">S</span>
+                  <div className="h-5 w-5 rounded overflow-hidden shadow">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
+                  </div>
                 </div>
               </div>
 

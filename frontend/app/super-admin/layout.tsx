@@ -68,12 +68,13 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-64 border-r border-slate-900 bg-slate-900/30 backdrop-blur-xl p-6 shrink-0">
         <div className="flex items-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-bold text-xl shadow-md">
-            S
+          <div className="h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-orange-500/25 bg-slate-900 border border-orange-500/30 shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
           </div>
           <div>
-            <h1 className="font-extrabold text-white text-lg tracking-tight">Super Panel</h1>
-            <p className="text-xs text-orange-500/80 font-medium uppercase tracking-wider">ServeDesk</p>
+            <h1 className="font-extrabold text-white text-base tracking-tight">Super Panel</h1>
+            <p className="text-[10px] text-orange-400 font-bold uppercase tracking-wider">ServeDesk · Alvora Tech</p>
           </div>
         </div>
 

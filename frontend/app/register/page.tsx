@@ -130,14 +130,18 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg space-y-8 z-10">
         <div className="text-center space-y-2">
           {/* Logo icon */}
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-extrabold text-3xl shadow-lg shadow-orange-500/25 select-none hover:scale-105 transition-transform">
-            R
+          <div className="mx-auto h-16 w-16 rounded-2xl overflow-hidden shadow-xl shadow-orange-500/25 bg-slate-900 border border-orange-500/30 select-none hover:scale-105 transition-transform">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="ServeDesk" className="h-full w-full object-cover" />
           </div>
           <h2 className="text-3xl font-black tracking-tight text-white leading-tight">
-            Register your Interest
+            Register for ServeDesk
           </h2>
+          <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
+            Powered by Alvora Tech Solution
+          </p>
           <p className="text-xs text-slate-400 leading-normal max-w-xs mx-auto">
-            Submit your restaurant details. Our Super Admin will verify and create your account.
+            Submit your restaurant details. Our team will verify and activate your dining platform.
           </p>
         </div>
 

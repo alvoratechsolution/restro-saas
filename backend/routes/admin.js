@@ -18,6 +18,7 @@ const Coupon = require("../models/Coupon");
 const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
 const Restaurant = require("../models/Restaurant");
+const { sendStaffInviteEmail } = require("../services/email");
 
 // Apply authentication middleware to all sub-routes here
 router.use(checkAuth(["RESTAURANT_ADMIN", "BRANCH_MANAGER", "KITCHEN", "STAFF", "CASHIER"]));
@@ -516,6 +517,14 @@ router.post("/staff", checkFeature("staff"), async (req, res) => {
       branchId: req.user.branchId,
       isActive: true,
     });
+
+    try {
+      const rest = await Restaurant.findById(req.user.restaurantId);
+      await sendStaffInviteEmail(email, name, role, rest ? rest.name : "Restaurant", password);
+    } catch (mailErr) {
+      console.warn("Staff invite email notice:", mailErr.message);
+    }
+
     return res.json({ success: true, data: user });
   } catch (error) {
     return res.status(500).json({ error: "Failed to create user" });
