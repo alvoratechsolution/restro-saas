@@ -6,7 +6,7 @@ const Restaurant = require("../models/Restaurant");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Lead = require("../models/Lead");
 const User = require("../models/User");
-const { sendWelcomeRegistrationEmail } = require("../services/email");
+const { sendWelcomeRegistrationEmail, isSmtpConfigured } = require("../services/email");
 
 
 router.use(checkAuth(["SUPER_ADMIN"]));
@@ -78,7 +78,7 @@ router.post("/restaurants/:id/resend-credentials", async (req, res) => {
       await adminUser.save();
     }
 
-    await sendWelcomeRegistrationEmail({
+    const mailResult = await sendWelcomeRegistrationEmail({
       email: adminUser.email,
       name: adminUser.name,
       restaurantName: restaurant.name,
@@ -90,13 +90,31 @@ router.post("/restaurants/:id/resend-credentials", async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Credentials email dispatched to ${adminUser.email}`,
+      emailSent: Boolean(mailResult?.success),
+      emailSkipped: Boolean(mailResult?.skipped),
+      message: mailResult?.success
+        ? `Credentials email dispatched to ${adminUser.email}`
+        : `Generated password for ${adminUser.email}: ${passwordToSend} (Configure SMTP in backend/.env to send via email)`,
       generatedPassword: passwordToSend,
     });
   } catch (error) {
     console.error("Resend credentials error:", error);
     return res.status(500).json({ error: error.message || "Failed to resend credentials" });
   }
+});
+
+// SMTP Status route
+router.get("/smtp-status", (req, res) => {
+  const configured = isSmtpConfigured();
+  return res.json({
+    success: true,
+    isConfigured: configured,
+    smtpUser: configured ? process.env.SMTP_USER : null,
+    smtpHost: process.env.SMTP_HOST || "smtp.gmail.com",
+    notice: configured
+      ? "SMTP service is active."
+      : "SMTP is not yet configured. Please add your real Gmail and 16-digit App Password to SMTP_USER and SMTP_PASS in backend/.env.",
+  });
 });
 
 // 2. SUBSCRIPTION PLANS

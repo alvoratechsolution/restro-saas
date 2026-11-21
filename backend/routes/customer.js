@@ -20,8 +20,27 @@ router.get("/menu", async (req, res) => {
     const { slug, tableNumber } = req.query;
     if (!slug) return res.status(400).json({ error: "Slug is required" });
 
-    const restaurant = await Restaurant.findOne({ slug, isActive: true, isSuspended: false }).populate("subscriptionPlan");
-    if (!restaurant) return res.status(404).json({ error: "Restaurant not found or inactive" });
+    // Look for restaurant by slug first
+    const restaurant = await Restaurant.findOne({ slug }).populate("subscriptionPlan");
+    if (!restaurant) return res.status(404).json({ success: false, error: "Restaurant not found" });
+
+    // If restaurant is suspended or inactive, return closed status cleanly for customer scanner
+    if (restaurant.isSuspended || !restaurant.isActive) {
+      return res.json({
+        success: false,
+        isSuspended: true,
+        restaurant: {
+          _id: restaurant._id,
+          name: restaurant.name,
+          slug: restaurant.slug,
+          isSuspended: Boolean(restaurant.isSuspended),
+          isActive: Boolean(restaurant.isActive),
+        },
+        message: restaurant.isSuspended
+          ? "This restaurant's ordering service is temporarily suspended by administration."
+          : "This restaurant is currently closed.",
+      });
+    }
 
     let branchId = null;
     let settings = null;
@@ -160,6 +179,15 @@ router.post("/orders", async (req, res) => {
       return res.status(400).json({ error: "Missing order parameters" });
     }
 
+    const restaurant = await Restaurant.findById(restaurantId).populate("subscriptionPlan");
+    if (!restaurant || restaurant.isSuspended || !restaurant.isActive) {
+      return res.status(403).json({
+        success: false,
+        isSuspended: true,
+        error: "This restaurant is currently closed or suspended, orders cannot be accepted.",
+      });
+    }
+
     const cleanTableNumber = decodeURIComponent(tableNumber).trim();
     let matchingTables = await findTablesForNumber(restaurantId, tableNumber);
     let table = matchingTables[0];
@@ -195,9 +223,6 @@ router.post("/orders", async (req, res) => {
     if (!allTableIds.some(id => id.toString() === table._id.toString())) {
       allTableIds.push(table._id);
     }
-
-    const restaurant = await Restaurant.findById(restaurantId).populate("subscriptionPlan");
-    if (!restaurant) return res.status(400).json({ error: "Restaurant not found" });
 
     const hasGstBilling = restaurant.subscriptionPlan && restaurant.subscriptionPlan.features && restaurant.subscriptionPlan.features.includes("gst-billing");
 
@@ -582,6 +607,16 @@ router.post("/call-waiter", async (req, res) => {
     if (!restaurantId || !tableNumber) {
       return res.status(400).json({ error: "Missing required details" });
     }
+
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant || restaurant.isSuspended || !restaurant.isActive) {
+      return res.status(403).json({
+        success: false,
+        isSuspended: true,
+        error: "This restaurant is currently closed.",
+      });
+    }
+
     const cleanTable = decodeURIComponent(tableNumber).trim();
 
     await Notification.create({

@@ -50,10 +50,11 @@ interface MenuItem {
 
 interface MenuResponse {
   success: boolean;
-  restaurant: Restaurant;
-  theme: Theme;
-  categories: Category[];
-  menuItems: MenuItem[];
+  restaurant?: Restaurant;
+  theme?: Theme;
+  categories?: Category[];
+  menuItems?: MenuItem[];
+  isSuspended?: boolean;
 }
 
 export default function RestaurantSlugPage({ params }: { params: Promise<{ restaurantSlug: string }> }) {
@@ -74,7 +75,35 @@ export default function RestaurantSlugPage({ params }: { params: Promise<{ resta
     );
   }
 
-  if (error || !response?.success) {
+  // Handle suspended or closed restaurant
+  if (response?.isSuspended || (!response?.success && response?.restaurant)) {
+    const closedName = response?.restaurant?.name || "This Restaurant";
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f8fafc] px-4 py-8 text-center font-sans">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-xl shadow-slate-200/60 border border-slate-200/80 flex flex-col items-center">
+          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/20 text-white font-black text-3xl mb-4">
+            {closedName.charAt(0).toUpperCase()}
+          </div>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight mb-2">
+            {closedName}
+          </h2>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200/80 text-rose-600 text-xs font-extrabold mb-4">
+            <span className="h-2 w-2 rounded-full bg-rose-500" />
+            CURRENTLY CLOSED
+          </div>
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-6">
+            This restaurant is currently closed or not taking online orders. Please visit us again soon!
+          </p>
+          <div className="pt-4 border-t border-slate-100 flex flex-col items-center gap-0.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">ServeDesk</span>
+            <span className="text-[9px] font-bold text-slate-400">Powered by Alvora Tech Solution</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !response?.success || !response.restaurant || !response.categories || !response.menuItems || !response.theme) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center">
         <UtensilsCrossed className="h-16 w-16 text-slate-800 mb-4 animate-pulse" />

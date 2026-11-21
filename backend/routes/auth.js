@@ -150,8 +150,9 @@ router.post("/register", async (req, res) => {
     });
 
     // Send Welcome Email with credentials and plan details via Nodemailer
+    let mailResult = { success: false, skipped: true };
     try {
-      await sendWelcomeRegistrationEmail({
+      mailResult = await sendWelcomeRegistrationEmail({
         email: user.email,
         name: restaurantName + " Admin",
         restaurantName,
@@ -162,12 +163,18 @@ router.post("/register", async (req, res) => {
       });
     } catch (mailErr) {
       console.warn("Welcome email dispatch notice:", mailErr.message);
+      mailResult = { success: false, error: mailErr.message };
     }
 
     return res.json({
       success: true,
       message: "Restaurant and Admin registered successfully",
       slug: restaurant.slug,
+      emailSent: Boolean(mailResult?.success),
+      emailSkipped: Boolean(mailResult?.skipped),
+      emailNotice: mailResult?.skipped
+        ? "SMTP is not configured in backend/.env yet. To send live emails, configure SMTP_USER & SMTP_PASS."
+        : null,
     });
   } catch (error) {
     console.error("Registration error:", error);

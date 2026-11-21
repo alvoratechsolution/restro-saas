@@ -91,6 +91,12 @@ export default function RestaurantsPage() {
   });
   const plans = plansData?.data || [];
 
+  // Fetch SMTP status
+  const { data: smtpData } = useQuery<{ success: boolean; isConfigured: boolean; smtpUser: string | null; notice: string }>({
+    queryKey: ["super-admin", "smtp-status"],
+    queryFn: () => apiFetch("/api/super-admin/smtp-status"),
+  });
+
   const updateRestaurantMutation = useMutation({
     mutationFn: (updatedData: {
       id: string;
@@ -151,7 +157,27 @@ export default function RestaurantsPage() {
         method: "POST",
       });
       if (res?.success) {
-        toast.success(res.message || `Credentials sent to ${email}`);
+        if (res.emailSent === false) {
+          toast(
+            (t) => (
+              <div className="text-xs">
+                <p className="font-bold text-amber-700">SMTP Not Configured</p>
+                <p className="text-slate-700 mt-1">
+                  Credentials for {email}:<br />
+                  <span className="font-mono font-bold bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded text-[11px] inline-block mt-0.5">
+                    Password: {res.generatedPassword}
+                  </span>
+                </p>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Configure SMTP in backend/.env to send automated emails.
+                </p>
+              </div>
+            ),
+            { duration: 9000, icon: "⚠️" }
+          );
+        } else {
+          toast.success(res.message || `Credentials sent to ${email}`);
+        }
       } else {
         toast.error(res?.error || "Failed to send credentials");
       }
@@ -204,7 +230,27 @@ export default function RestaurantsPage() {
         throw new Error(data.error || "Failed to add restaurant");
       }
 
-      toast.success("New Restaurant registered! Credentials email dispatched.");
+      if (data.emailSent) {
+        toast.success("New Restaurant registered & Welcome Email sent to admin!");
+      } else if (data.emailNotice || data.emailSkipped) {
+        toast(
+          (t) => (
+            <div className="text-xs">
+              <p className="font-bold text-emerald-700">✓ Restaurant Registered Successfully!</p>
+              <p className="text-slate-600 mt-0.5">
+                Note: Email dispatch is pending (configure SMTP_USER &amp; SMTP_PASS in backend/.env).
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                Admin: {newAdminEmail} | Pass: {newAdminPassword}
+              </p>
+            </div>
+          ),
+          { duration: 8000, icon: "ℹ️" }
+        );
+      } else {
+        toast.success("New Restaurant registered successfully!");
+      }
+
       queryClient.invalidateQueries({ queryKey: ["super-admin", "restaurants"] });
       resetAddForm();
     } catch (err: any) {
@@ -242,6 +288,25 @@ export default function RestaurantsPage() {
           Add Restaurant
         </Button>
       </div>
+
+      {/* SMTP Notice Banner if unconfigured */}
+      {smtpData && !smtpData.isConfigured && (
+        <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-2xs">
+          <div className="flex items-start gap-3">
+            <div className="h-8 w-8 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0 text-amber-700 mt-0.5">
+              <Mail className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-amber-950">
+                Email Dispatch Pending (SMTP Configuration)
+              </p>
+              <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                Welcome emails with credentials to new restaurant admins will be dispatched automatically once your Gmail and Google App Password are added to <code className="bg-amber-100/90 px-1 py-0.5 rounded font-mono text-[10px] text-amber-900">backend/.env</code> (<code className="font-mono text-[10px]">SMTP_USER</code> &amp; <code className="font-mono text-[10px]">SMTP_PASS</code>).
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">

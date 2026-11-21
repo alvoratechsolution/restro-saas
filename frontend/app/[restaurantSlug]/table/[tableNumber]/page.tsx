@@ -22,6 +22,8 @@ import {
   Receipt,
   Tag,
   CheckCircle2,
+  RotateCw,
+  AlertCircle,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -88,11 +90,13 @@ interface SettingsData {
 
 interface MenuResponse {
   success: boolean;
-  restaurant: Restaurant;
-  theme: Theme;
-  categories: Category[];
-  menuItems: MenuItem[];
+  restaurant?: Restaurant;
+  theme?: Theme;
+  categories?: Category[];
+  menuItems?: MenuItem[];
   settings?: SettingsData;
+  isSuspended?: boolean;
+  message?: string;
 }
 
 export default function TableOrderingPage({
@@ -221,7 +225,64 @@ export default function TableOrderingPage({
     );
   }
 
-  // Error Screen
+  // Suspended or Inactive Restaurant Screen (When Super Admin marks restaurant as suspended / inactive)
+  if (menuResponse?.isSuspended || (!menuResponse?.success && menuResponse?.restaurant)) {
+    const closedRestName = menuResponse?.restaurant?.name || "This Restaurant";
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f8fafc] px-4 py-8 text-center font-sans">
+        <div className="w-full max-w-sm bg-white rounded-3xl p-7 shadow-xl shadow-slate-200/60 border border-slate-200/80 flex flex-col items-center">
+          {/* Logo / Badge */}
+          <div className="relative mb-4">
+            <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/20 text-white font-black text-3xl">
+              {closedRestName.charAt(0).toUpperCase()}
+            </div>
+            <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-rose-500 border-2 border-white flex items-center justify-center shadow">
+              <span className="h-2.5 w-2.5 rounded-full bg-white animate-pulse" />
+            </div>
+          </div>
+
+          <h2 className="text-xl font-black text-slate-900 tracking-tight mb-1">
+            {closedRestName}
+          </h2>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mb-3">
+            Table {tableNumber}
+          </div>
+
+          {/* Status Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 border border-rose-200/80 text-rose-600 text-xs font-extrabold mb-4">
+            <span className="h-2 w-2 rounded-full bg-rose-500" />
+            CURRENTLY CLOSED
+          </div>
+
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-6">
+            We are currently not accepting digital table orders at this time. Please speak with our restaurant staff or waiter directly for assistance.
+          </p>
+
+          {/* Refresh / Check Button */}
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+          >
+            <RotateCw className="h-3.5 w-3.5" />
+            Check / Refresh Status
+          </button>
+
+          {/* Powered by Alvora badge */}
+          <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center gap-0.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+              ServeDesk
+            </span>
+            <span className="text-[9px] font-bold text-slate-400">
+              Powered by Alvora Tech Solution
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error Screen (for completely invalid links or network errors)
   if (error || !menuResponse?.success || !restaurant) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#f8fafc] px-4 text-center text-slate-800 font-sans">

@@ -51,6 +51,19 @@ async function sendOtpEmail(email, name, otp) {
   }
 }
 
+function isSmtpConfigured() {
+  const user = process.env.SMTP_USER || "";
+  const pass = process.env.SMTP_PASS || "";
+  return Boolean(
+    user &&
+    !user.includes("your_smtp") &&
+    !user.includes("your_email") &&
+    pass &&
+    !pass.includes("your_smtp") &&
+    !pass.includes("your_password")
+  );
+}
+
 async function sendWelcomeRegistrationEmail(dataOrEmail, legacyName, legacyRestaurantName, legacyPassword, legacyPlan, legacyHasKitchen, legacyHasStaff) {
   let email, name, restaurantName, password, plan, hasKitchen, hasStaff;
 
@@ -72,10 +85,7 @@ async function sendWelcomeRegistrationEmail(dataOrEmail, legacyName, legacyResta
     hasStaff = legacyHasStaff;
   }
 
-  const isConfigured =
-    process.env.SMTP_USER &&
-    !process.env.SMTP_USER.includes("your_smtp") &&
-    !process.env.SMTP_USER.includes("your_email");
+  const isConfigured = isSmtpConfigured();
 
   const loginUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://restro-saas-website.vercel.app") + "/login";
 
@@ -198,14 +208,26 @@ async function sendWelcomeRegistrationEmail(dataOrEmail, legacyName, legacyResta
   if (!isConfigured) {
     console.log(`[SMTP Notice] Welcome email to ${email} skipped because SMTP_USER is not configured in .env.`);
     console.log(`[SMTP Email Prepared] Credentials email for ${restaurantName} (Login: ${email}, Pass: ${password}) ready to send when SMTP credentials are added.`);
-    return;
+    return {
+      success: false,
+      skipped: true,
+      reason: "SMTP credentials not configured in backend/.env",
+    };
   }
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`[SMTP Success] Onboarding email with credentials sent to ${email}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[SMTP Success] Onboarding email with credentials sent to ${email} (MessageId: ${info.messageId})`);
+    return {
+      success: true,
+      messageId: info.messageId,
+    };
   } catch (err) {
     console.warn("[SMTP Error] Failed to send welcome email:", err.message);
+    return {
+      success: false,
+      error: err.message,
+    };
   }
 }
 
@@ -271,6 +293,7 @@ async function sendStaffInviteEmail(email, name, role, restaurantName, tempPassw
 
 module.exports = {
   transporter,
+  isSmtpConfigured,
   sendOtpEmail,
   sendWelcomeRegistrationEmail,
   sendStaffInviteEmail,
