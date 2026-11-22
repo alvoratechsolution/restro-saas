@@ -28,7 +28,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
-  selectedVariant?: string;
+  selectedVariant?: string | { name: string; price?: number };
   selectedAddons: Array<{ name: string; price: number }>;
   specialInstructions?: string;
 }
@@ -166,9 +166,11 @@ export default function OrdersPage() {
     let itemsHtml = "";
     order.items.forEach((item) => {
       const addonsText = item.selectedAddons?.length > 0 
-        ? `<div class="item-addons">+ ${item.selectedAddons.map(a => a.name).join(", ")}</div>` 
+        ? `<div class="item-addons">+ ${item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}</div>` 
         : "";
-      const variantText = item.selectedVariant ? `<div class="item-variant">Portion: ${item.selectedVariant}</div>` : "";
+      const variantText = item.selectedVariant 
+        ? `<div class="item-variant">Portion: ${typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}</div>` 
+        : "";
       const noteText = item.specialInstructions ? `<div class="item-variant" style="color: #b45309; font-weight: bold;">Note: ${item.specialInstructions}</div>` : "";
       
       itemsHtml += `
@@ -481,12 +483,12 @@ export default function OrdersPage() {
                         </p>
                         {item.selectedVariant && (
                           <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                            Portion: {item.selectedVariant}
+                            Portion: {typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}
                           </p>
                         )}
                         {item.selectedAddons?.length > 0 && (
                           <p className="text-[10px] text-orange-600 font-semibold mt-0.5">
-                            + {item.selectedAddons.map((a) => a.name).join(", ")}
+                            + {item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}
                           </p>
                         )}
                         {item.specialInstructions && (

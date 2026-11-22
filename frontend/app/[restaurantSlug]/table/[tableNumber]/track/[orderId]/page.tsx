@@ -29,7 +29,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
-  selectedVariant?: string;
+  selectedVariant?: string | { name: string; price?: number };
   selectedAddons: Array<{ name: string; price: number }>;
 }
 
@@ -402,11 +402,13 @@ export default function OrderTrackingPage({
                       {item.quantity}x {item.name}
                     </p>
                     {item.selectedVariant && (
-                      <p className="text-[11px] text-slate-500 font-semibold mt-0.5">Portion: {item.selectedVariant}</p>
+                      <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                        Portion: {typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}
+                      </p>
                     )}
                     {item.selectedAddons?.length > 0 && (
                       <p className="text-[11px] text-orange-600 font-semibold mt-0.5">
-                        + {item.selectedAddons.map((a) => a.name).join(", ")}
+                        + {item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}
                       </p>
                     )}
                   </div>

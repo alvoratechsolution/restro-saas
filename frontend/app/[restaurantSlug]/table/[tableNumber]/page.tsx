@@ -176,10 +176,11 @@ export default function TableOrderingPage({
   // Order submission loading
   const [submittingOrder, setSubmittingOrder] = useState(false);
 
-  // Query menu
+  // Query menu (with 1-minute fresh caching for instant mobile QR scans)
   const { data: menuResponse, isLoading, error } = useQuery<MenuResponse>({
     queryKey: ["customer", "menu", restaurantSlug],
     queryFn: () => apiFetch(`/api/customer/menu?slug=${restaurantSlug}&tableNumber=${tableNumber}`),
+    staleTime: 60 * 1000,
   });
 
   // Query active order for this table (consolidated billing)
@@ -190,6 +191,7 @@ export default function TableOrderingPage({
   });
 
   const activeTableOrder = activeOrderData?.activeOrder;
+  const hasActiveOrder = Boolean(activeTableOrder?._id || activeOrderId);
 
   useEffect(() => {
     if (activeTableOrder?._id) {
@@ -342,20 +344,20 @@ export default function TableOrderingPage({
           {/* Restaurant Branding */}
           <div className="text-center space-y-2">
             <div
-              className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl text-white font-black text-2xl shadow-xl shadow-orange-500/20"
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl text-white shadow-xl shadow-orange-500/20"
               style={{ backgroundImage: `linear-gradient(135deg, ${primaryCol}, #f97316)` }}
             >
-              {restaurant.name.charAt(0)}
+              <UtensilsCrossed className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-snug pt-1">
               {restaurant.name}
             </h1>
             <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200/80 px-3.5 py-1 rounded-full text-orange-700 text-xs font-black">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              TABLE {tableNumber}
+              TABLE / ROOM {tableNumber}
             </div>
             <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed pt-1">
-              Contactless dining & instant ordering directly from your table.
+              Contactless dining & room service directly from your table or room.
             </p>
           </div>
 
@@ -363,7 +365,7 @@ export default function TableOrderingPage({
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl shadow-slate-200/40 space-y-4">
             <div className="border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-900">Guest Details</h3>
-              <p className="text-[11px] text-slate-500">Enter your name for your table orders</p>
+              <p className="text-[11px] text-slate-500">Enter your name for table & room service orders</p>
             </div>
 
             <form onSubmit={handleWelcomeSubmit} className="space-y-3.5">
@@ -459,11 +461,11 @@ export default function TableOrderingPage({
     );
   }
 
-  // Handle Waiter Request Calls
+  // Handle Staff / Room Service Request Calls
   const handleCallWaiterAction = async (reason: string) => {
     try {
       setCallingWaiter(true);
-      const branchId = (restaurant as unknown as { branchId?: string })?.branchId || "";
+      const branchId = (restaurant as unknown as { branchId?: string })?.branchId || undefined;
       await apiFetch("/api/customer/call-waiter", {
         method: "POST",
         body: JSON.stringify({
@@ -485,8 +487,8 @@ export default function TableOrderingPage({
       setWaiterModalOpen(false);
       Swal.fire({
         icon: "success",
-        title: "🛎️ Waiter Notified!",
-        text: `Staff has been alerted to assist Table ${tableNumber} for "${reason}".`,
+        title: "🛎️ Staff Alerted!",
+        text: `Assistance requested for Table / Room ${tableNumber}: "${reason}". Staff will attend shortly.`,
         timer: 2500,
         showConfirmButton: false,
       });
@@ -494,7 +496,7 @@ export default function TableOrderingPage({
       Swal.fire({
         icon: "error",
         title: "Request Failed",
-        text: (err as Error).message || "Failed to call waiter",
+        text: (err as Error).message || "Failed to alert staff",
       });
     } finally {
       setCallingWaiter(false);
@@ -542,8 +544,8 @@ export default function TableOrderingPage({
   };
 
   const handleAddonToggle = (addon: Addon) => {
-    if (selectedAddons.some((a) => a._id === addon._id)) {
-      setSelectedAddons(selectedAddons.filter((a) => a._id !== addon._id));
+    if (selectedAddons.some((a) => (a._id && addon._id ? a._id === addon._id : a.name === addon.name))) {
+      setSelectedAddons(selectedAddons.filter((a) => (a._id && addon._id ? a._id !== addon._id : a.name !== addon.name)));
     } else {
       setSelectedAddons([...selectedAddons, addon]);
     }
@@ -702,10 +704,19 @@ export default function TableOrderingPage({
   const sgst = (taxableAmount * sgstRate) / 100;
   const total = taxableAmount + cgst + sgst;
 
+  const isHotel = (restaurant as any)?.businessType === "hotel";
+  const unitLabel = isHotel ? "Room" : "Table";
+  const serviceLabel = isHotel ? "In-Room Dining" : "Table Dining";
+  const attendantLabel = isHotel ? "Room Service" : "Call Waiter";
+
   const totalQty = items.reduce((acc, i) => acc + i.quantity, 0);
 
   const filteredItems = menuItems.filter((item) => {
-    const matchesCat = selectedCat === "All" || item.categoryId === selectedCat;
+    const rawCatId =
+      typeof item.categoryId === "object" && item.categoryId !== null
+        ? ((item.categoryId as any)._id?.toString() || (item.categoryId as any).toString())
+        : item.categoryId?.toString();
+    const matchesCat = selectedCat === "All" || rawCatId === selectedCat;
     const matchesType =
       filterType === "all" ||
       (filterType === "veg" && item.foodType === "veg") ||
@@ -718,40 +729,50 @@ export default function TableOrderingPage({
       {/* Soft background ambient gradient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gradient-to-b from-orange-100/40 via-amber-50/20 to-transparent pointer-events-none blur-3xl" />
 
-      {/* Clean Mobile-First Header */}
-      <header className="sticky top-0 backdrop-blur-xl bg-white/90 border-b border-slate-200/80 px-4 py-3.5 z-30 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div
-            className="h-10 w-10 rounded-2xl text-white flex items-center justify-center font-black text-lg shadow-md shadow-orange-500/15 shrink-0"
-            style={{ backgroundImage: `linear-gradient(135deg, ${primaryCol}, #f97316)` }}
-          >
-            {restaurant.name.charAt(0)}
+      {/* Premium Dark Navigation Header with Centered Restaurant Identity */}
+      <header className="sticky top-0 z-30 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/90 px-3 sm:px-4 py-2.5 shadow-md backdrop-blur-xl">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
+          {/* Left Unit Badge */}
+          <div className="w-16 sm:w-28 flex items-center justify-start shrink-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 shadow-inner">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-[11px] font-black text-orange-400 tracking-wider uppercase">
+                {unitLabel} {tableNumber}
+              </span>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="font-black text-slate-900 text-sm sm:text-base tracking-tight leading-tight truncate">
-              {restaurant.name}
-            </h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] text-orange-600 font-extrabold uppercase tracking-wider">
-                Table {tableNumber}
+
+          {/* Top Middle: Restaurant Identity in Dark Background */}
+          <div className="flex flex-col items-center justify-center text-center px-1 min-w-0 flex-1">
+            <div className="flex items-center justify-center max-w-full">
+              <h1 className="font-black text-white text-base sm:text-lg tracking-tight leading-none truncate drop-shadow-sm">
+                {restaurant.name}
+              </h1>
+            </div>
+            <div className="flex items-center justify-center gap-1.5 mt-1">
+              <span className="text-[10px] text-slate-400 font-semibold tracking-wide">
+                {unitLabel} {tableNumber} · {serviceLabel}
               </span>
               {verifiedName && verifiedName !== "Guest" && (
-                <span className="text-[10px] text-slate-400 font-medium truncate">
+                <span className="text-[10px] text-orange-400 font-bold truncate max-w-[110px]">
                   · {verifiedName}
                 </span>
               )}
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={() => setWaiterModalOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 text-orange-700 rounded-xl text-xs font-extrabold transition-transform active:scale-95 shadow-xs cursor-pointer shrink-0"
-        >
-          <BellRing className="h-4 w-4 text-orange-600" />
-          <span className="hidden xs:inline">Call Waiter</span>
-        </button>
+          {/* Right: Quick Attendant / Waiter Call Button */}
+          <div className="w-16 sm:w-28 flex items-center justify-end shrink-0">
+            <button
+              onClick={() => setWaiterModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold transition-transform active:scale-95 shadow-xs cursor-pointer"
+              title={attendantLabel}
+            >
+              <BellRing className="h-3.5 w-3.5 text-amber-400 animate-pulse shrink-0" />
+              <span className="text-[11px] font-black">{attendantLabel}</span>
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* Sleek Compact Notification Pill (Zero Backdrop, Zero Black Shadow) */}
@@ -796,14 +817,14 @@ export default function TableOrderingPage({
           </div>
         )}
 
-        {/* Table Welcome Banner */}
+        {/* Unit Welcome Banner */}
         <div className="bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-5 shadow-xs flex items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-orange-600 text-[10px] font-black uppercase tracking-wider">
-              <Sparkles className="h-3.5 w-3.5" /> Table Dining
+              <Sparkles className="h-3.5 w-3.5" /> {serviceLabel}
             </div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-              Table {tableNumber} Digital Menu
+              {unitLabel} {tableNumber} Digital Menu
             </h2>
             <p className="text-xs text-slate-500 leading-relaxed">
               Select dishes, customize options, and send orders straight to the kitchen.
@@ -913,6 +934,8 @@ export default function TableOrderingPage({
                     <img
                       src={item.images[0]}
                       alt={item.name}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -1019,9 +1042,9 @@ export default function TableOrderingPage({
                     Select Portion
                   </h4>
                   <div className="grid grid-cols-2 gap-2.5">
-                    {customizingItem.variants.map((v) => (
+                    {customizingItem.variants.map((v, vIdx) => (
                       <button
-                        key={v._id}
+                        key={v._id || `${v.name}-${vIdx}`}
                         type="button"
                         onClick={() => setSelectedVariant(v)}
                         className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
@@ -1045,11 +1068,11 @@ export default function TableOrderingPage({
                     Add Extras
                   </h4>
                   <div className="space-y-2">
-                    {customizingItem.addons.map((a) => {
-                      const isSel = selectedAddons.some((addon) => addon._id === a._id);
+                    {customizingItem.addons.map((a, aIdx) => {
+                      const isSel = selectedAddons.some((addon) => (addon._id && a._id ? addon._id === a._id : addon.name === a.name));
                       return (
                         <button
-                          key={a._id}
+                          key={a._id || `${a.name}-${aIdx}`}
                           type="button"
                           onClick={() => handleAddonToggle(a)}
                           className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
@@ -1135,12 +1158,12 @@ export default function TableOrderingPage({
                       <p className="font-black text-slate-900">{item.name}</p>
                       {item.selectedVariant && (
                         <p className="text-[11px] text-slate-500 font-semibold">
-                          Portion: {item.selectedVariant.name}
+                          Portion: {typeof item.selectedVariant === "object" ? (item.selectedVariant as any)?.name : item.selectedVariant}
                         </p>
                       )}
                       {item.selectedAddons?.length > 0 && (
                         <p className="text-[11px] text-orange-600 font-semibold">
-                          + {item.selectedAddons.map((a) => a.name).join(", ")}
+                          + {item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}
                         </p>
                       )}
                       {item.specialInstructions && (
@@ -1384,7 +1407,7 @@ export default function TableOrderingPage({
 
       {/* Compact Floating Cart Pill Above Bottom Nav */}
       {totalQty > 0 && !cartOpen && (
-        <div className="fixed bottom-[58px] left-3 right-3 z-30 md:hidden max-w-sm mx-auto animate-in slide-in-from-bottom duration-150">
+        <div className="fixed bottom-[66px] left-3 right-3 z-30 md:hidden max-w-sm mx-auto animate-in slide-in-from-bottom duration-150">
           <button
             onClick={() => setCartOpen(true)}
             className="w-full bg-slate-900/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center justify-between font-bold text-xs border border-white/10 active:scale-[0.98] transition-transform cursor-pointer"
@@ -1417,7 +1440,7 @@ export default function TableOrderingPage({
         </div>
       )}
 
-      {/* Mobile App-Style Bottom Navigation Bar */}
+      {/* Mobile App-Style Bottom Navigation Bar (Preserved & Enhanced) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-2 py-1.5">
         <div className="max-w-md mx-auto grid grid-cols-4 items-center gap-1">
           {/* Menu Tab */}
@@ -1450,61 +1473,61 @@ export default function TableOrderingPage({
             </span>
           </button>
 
-          {/* Track Order / Table Bill Tab */}
+          {/* Track Order Tab (Clickable ONLY when active order exists) */}
           <button
             onClick={() => {
-              if (activeTableOrder?._id || activeOrderId) {
+              if (hasActiveOrder) {
                 router.push(`/${restaurantSlug}/table/${tableNumber}/track/${activeTableOrder?._id || activeOrderId}`);
-              } else {
-                Swal.fire({
-                  icon: "info",
-                  title: "No Active Order",
-                  text: `No active order on Table ${tableNumber} yet. Add dishes from the menu to place an order!`,
-                  confirmButtonColor: primaryCol,
-                });
               }
             }}
-            className="flex flex-col items-center justify-center py-1 text-slate-600 hover:text-slate-900 font-bold transition-all active:scale-95 cursor-pointer relative"
+            disabled={!hasActiveOrder}
+            className={`flex flex-col items-center justify-center py-1 transition-all ${
+              hasActiveOrder
+                ? "text-orange-600 hover:text-orange-700 font-black active:scale-95 cursor-pointer"
+                : "text-slate-300 opacity-35 cursor-not-allowed select-none"
+            }`}
+            title={hasActiveOrder ? "Track Live Table Order" : "Place an order first to enable tracking"}
           >
             <div className="relative">
-              <Receipt className="h-5 w-5 text-slate-700" />
-              {activeTableOrder && (
+              <Receipt className={`h-5 w-5 ${hasActiveOrder ? "text-orange-600" : "text-slate-300"}`} />
+              {hasActiveOrder && (
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
               )}
             </div>
-            <span className="text-[10px] mt-1 font-semibold text-slate-700">
-              {activeTableOrder ? "Table Bill" : "Track"}
+            <span className={`text-[10px] mt-1 ${hasActiveOrder ? "font-black text-orange-600" : "font-medium text-slate-400"}`}>
+              {hasActiveOrder ? (activeTableOrder ? "Table Bill" : "Track") : "Track"}
             </span>
           </button>
 
-          {/* Call Waiter Tab */}
+          {/* Call Waiter & Water Assistance Tab */}
+          {/* Call Waiter / Room Service Tab */}
           <button
             onClick={() => setWaiterModalOpen(true)}
-            className="flex flex-col items-center justify-center py-1 text-slate-600 hover:text-slate-900 font-bold transition-all active:scale-95 cursor-pointer"
+            className="flex flex-col items-center justify-center py-1 text-slate-600 hover:text-amber-600 font-bold transition-all active:scale-95 cursor-pointer"
           >
-            <BellRing className="h-5 w-5 text-amber-500 animate-bounce" />
-            <span className="text-[10px] mt-1 font-semibold text-slate-700">Call Waiter</span>
+            <BellRing className="h-5 w-5 text-amber-500 animate-pulse" />
+            <span className="text-[10px] mt-1 font-bold text-slate-700">{attendantLabel}</span>
           </button>
         </div>
       </nav>
 
-      {/* Waiter Request Modal */}
+      {/* Guest Assistance & Service Request Modal */}
       {waiterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                  <BellRing className="h-4.5 w-4.5" />
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-xs">
+                  <BellRing className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">Call Waiter · Table {tableNumber}</h3>
-                  <p className="text-[11px] text-slate-400">Select what assistance you need</p>
+                  <h3 className="text-sm font-black text-slate-900">{attendantLabel} · {unitLabel} {tableNumber}</h3>
+                  <p className="text-[11px] text-slate-400">Select what service you need</p>
                 </div>
               </div>
               <button
                 onClick={() => setWaiterModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-xl cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1512,19 +1535,20 @@ export default function TableOrderingPage({
 
             <div className="grid grid-cols-2 gap-2.5">
               {[
-                { label: "Water Needed", icon: "💧" },
-                { label: "Clean Table", icon: "🍽️" },
-                { label: "Call Floor Waiter", icon: "🛎️" },
-                { label: "Bill / Payment", icon: "💳" },
+                { label: "Water Needed", sub: "Fresh drinking water bottle", icon: "💧" },
+                { label: isHotel ? "Housekeeping" : "Clean Table", sub: isHotel ? "Room cleaning & clearing" : "Table clearing & cleaning", icon: "🍽️" },
+                { label: isHotel ? "Call Room Attendant" : "Call Floor Waiter", sub: isHotel ? "Room service assistance" : "Floor waiter assistance", icon: "🛎️" },
+                { label: "Bill / Payment", sub: "Request bill & payment", icon: "💳" },
               ].map((opt) => (
                 <button
                   key={opt.label}
                   onClick={() => handleCallWaiterAction(opt.label)}
                   disabled={callingWaiter}
-                  className="flex flex-col items-center justify-center p-3.5 bg-slate-50 hover:bg-orange-50/70 border border-slate-200 hover:border-orange-300 rounded-2xl transition-all cursor-pointer text-center group active:scale-95"
+                  className="flex flex-col items-center justify-center p-3.5 bg-slate-50 hover:bg-orange-50/80 border border-slate-200 hover:border-orange-300 rounded-2xl transition-all cursor-pointer text-center group active:scale-95 disabled:opacity-50"
                 >
-                  <span className="text-xl mb-1">{opt.icon}</span>
-                  <span className="text-xs font-bold text-slate-700 group-hover:text-orange-600">{opt.label}</span>
+                  <span className="text-2xl mb-1">{opt.icon}</span>
+                  <span className="text-xs font-black text-slate-800 group-hover:text-orange-600">{opt.label}</span>
+                  <span className="text-[10px] text-slate-400 mt-0.5 font-medium leading-tight">{opt.sub}</span>
                 </button>
               ))}
             </div>

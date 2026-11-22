@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { Lock, Mail, Loader2, ArrowRight, Eye, EyeOff, ShieldCheck, Store, UtensilsCrossed, BellRing, ArrowLeft } from "lucide-react";
+import { Lock, Mail, Loader2, ArrowRight, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,12 +66,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickFill = (demoEmail: string, demoPass: string, roleName: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    toast.success(`Loaded ${roleName} credentials!`);
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#070a14] px-4 py-10 sm:px-6 relative overflow-hidden font-sans selection:bg-orange-500 selection:text-white">
       {/* Background ambient radial glow meshes */}
@@ -128,17 +122,9 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-300 block">
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs font-semibold text-orange-400 hover:text-orange-300 transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="text-xs font-bold text-slate-300 block">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <input
@@ -181,75 +167,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Accounts Auto-fill Box */}
-          <div className="pt-4 border-t border-slate-800/80 space-y-2.5">
-            <p className="text-[10px] font-black text-orange-400 uppercase tracking-wider text-center flex items-center justify-center gap-1.5">
-              <span>⚡</span> Quick Demo Login (Click to Auto-fill)
-            </p>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {/* Super Admin Pill */}
-              <button
-                type="button"
-                onClick={() => handleQuickFill("superadmin@servedesk.com", "SuperAdminPassword123!", "Super Admin")}
-                className="bg-purple-950/30 hover:bg-purple-900/40 border border-purple-500/30 hover:border-purple-400/50 p-2.5 rounded-xl text-left transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div className="flex items-center gap-1 text-[11px] font-black text-purple-300 group-hover:text-purple-200">
-                  <ShieldCheck className="h-3 w-3 text-purple-400" />
-                  <span>Super Admin</span>
-                </div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">
-                  superadmin@servedesk.com
-                </div>
-              </button>
-
-              {/* Restaurant Admin Pill */}
-              <button
-                type="button"
-                onClick={() => handleQuickFill("admin@tastybites.com", "AdminPassword123!", "Restaurant Admin")}
-                className="bg-orange-950/30 hover:bg-orange-900/40 border border-orange-500/30 hover:border-orange-400/50 p-2.5 rounded-xl text-left transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div className="flex items-center gap-1 text-[11px] font-black text-orange-300 group-hover:text-orange-200">
-                  <Store className="h-3 w-3 text-orange-400" />
-                  <span>Restaurant Admin</span>
-                </div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">
-                  admin@tastybites.com
-                </div>
-              </button>
-
-              {/* Kitchen Chef Pill */}
-              <button
-                type="button"
-                onClick={() => handleQuickFill("chef@tastybites.com", "ChefPassword123!", "Kitchen Chef")}
-                className="bg-rose-950/30 hover:bg-rose-900/40 border border-rose-500/30 hover:border-rose-400/50 p-2.5 rounded-xl text-left transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div className="flex items-center gap-1 text-[11px] font-black text-rose-300 group-hover:text-rose-200">
-                  <UtensilsCrossed className="h-3 w-3 text-rose-400" />
-                  <span>Kitchen KDS</span>
-                </div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">
-                  chef@tastybites.com
-                </div>
-              </button>
-
-              {/* Floor Staff Pill */}
-              <button
-                type="button"
-                onClick={() => handleQuickFill("waiter@tastybites.com", "WaiterPassword123!", "Floor Waiter")}
-                className="bg-blue-950/30 hover:bg-blue-900/40 border border-blue-500/30 hover:border-blue-400/50 p-2.5 rounded-xl text-left transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div className="flex items-center gap-1 text-[11px] font-black text-blue-300 group-hover:text-blue-200">
-                  <BellRing className="h-3 w-3 text-blue-400" />
-                  <span>Floor Staff</span>
-                </div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">
-                  waiter@tastybites.com
-                </div>
-              </button>
-            </div>
-          </div>
 
           {/* Registration link */}
           <div className="pt-3 border-t border-slate-800/80 text-center">

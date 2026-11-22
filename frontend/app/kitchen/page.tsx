@@ -14,7 +14,7 @@ interface OrderItem {
   _id: string;
   name: string;
   quantity: number;
-  selectedVariant?: string;
+  selectedVariant?: string | { name: string; price?: number };
   selectedAddons: Array<{ name: string; price: number }>;
   specialInstructions?: string;
   status?: string;
@@ -247,12 +247,12 @@ export default function KitchenPage() {
                           </p>
                           {item.selectedVariant && (
                             <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                              Portion: {item.selectedVariant}
+                              Portion: {typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}
                             </p>
                           )}
                           {item.selectedAddons?.length > 0 && (
                             <p className="text-[10px] text-rose-500/80 font-semibold mt-0.5">
-                              + {item.selectedAddons.map((a) => a.name).join(", ")}
+                              + {item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}
                             </p>
                           )}
                           {item.specialInstructions && (

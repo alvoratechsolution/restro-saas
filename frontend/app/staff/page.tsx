@@ -78,7 +78,9 @@ export default function StaffPage() {
     // Listen for waiter calls
     socket.on("waiter-called", (data: any) => {
       playStaffBeep();
-      toast(`🛎️ Table ${data.tableNumber} needs assistance!`, {
+      const label = data?.unitLabel || "Table / Room";
+      const reasonText = data?.reason ? `: ${data.reason}` : " needs assistance!";
+      toast(`🛎️ ${label} ${data.tableNumber}${reasonText}`, {
         icon: "💁",
         duration: 6000,
       });

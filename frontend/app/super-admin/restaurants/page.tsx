@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
 import { BACKEND_URL } from "@/lib/config";
-import { Store, Globe, Calendar, CheckCircle, AlertTriangle, Loader2, Plus, X, ShieldCheck, ChefHat, Users, Mail, Trash2 } from "lucide-react";
+import { Store, Globe, Calendar, CheckCircle, AlertTriangle, Loader2, Plus, X, ShieldCheck, ChefHat, Users, Mail, Trash2, Hotel, UtensilsCrossed } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -33,6 +33,7 @@ interface Restaurant {
   customDomain?: string;
   hasKitchen?: boolean;
   hasStaff?: boolean;
+  businessType?: "restaurant" | "hotel";
   enabledModules?: string[];
   createdAt: string;
 }
@@ -51,6 +52,7 @@ export default function RestaurantsPage() {
   const [newPhone, setNewPhone] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [newSubscriptionPlanId, setNewSubscriptionPlanId] = useState("");
+  const [newBusinessType, setNewBusinessType] = useState<"restaurant" | "hotel">("restaurant");
   const [enableKitchen, setEnableKitchen] = useState(true);
   const [enableStaff, setEnableStaff] = useState(true);
   const [addingRestaurant, setAddingRestaurant] = useState(false);
@@ -108,6 +110,7 @@ export default function RestaurantsPage() {
       subscriptionEndsAt?: string | null;
       hasKitchen?: boolean;
       hasStaff?: boolean;
+      businessType?: "restaurant" | "hotel";
       enabledModules?: string[];
     }) =>
       apiFetch("/api/super-admin/restaurants", {
@@ -255,6 +258,7 @@ export default function RestaurantsPage() {
           phone: newPhone,
           address: newAddress,
           subscriptionPlanId: newSubscriptionPlanId || undefined,
+          businessType: newBusinessType,
           hasKitchen: enableKitchen,
           hasStaff: enableStaff,
           enabledModules: [
@@ -391,12 +395,40 @@ export default function RestaurantsPage() {
                     <tr key={rest._id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 bg-orange-50 text-orange-600 flex items-center justify-center rounded-lg border border-orange-200/80">
-                            <Store className="h-4 w-4" />
+                          <div className={`h-9 w-9 flex items-center justify-center rounded-lg border ${
+                            rest.businessType === "hotel"
+                              ? "bg-indigo-50 text-indigo-600 border-indigo-200"
+                              : "bg-orange-50 text-orange-600 border-orange-200/80"
+                          }`}>
+                            {rest.businessType === "hotel" ? (
+                              <Hotel className="h-4 w-4" />
+                            ) : (
+                              <Store className="h-4 w-4" />
+                            )}
                           </div>
                           <div>
                             <div className="font-bold text-slate-900">{rest.name}</div>
-                            <div className="text-xs text-slate-400">slug: /{rest.slug}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-slate-400">slug: /{rest.slug}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextType = rest.businessType === "hotel" ? "restaurant" : "hotel";
+                                  updateRestaurantMutation.mutate({
+                                    id: rest._id,
+                                    businessType: nextType,
+                                  });
+                                }}
+                                title="Click to toggle between Restaurant (Tables) and Hotel (Rooms)"
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold transition-all border cursor-pointer ${
+                                  rest.businessType === "hotel"
+                                    ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                                    : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                                }`}
+                              >
+                                {rest.businessType === "hotel" ? "🏨 Hotel (Rooms)" : "🍽️ Restaurant (Tables)"}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -740,6 +772,61 @@ export default function RestaurantsPage() {
                 ]}
                 disabled={addingRestaurant}
               />
+
+              {/* Property / Business Type Selection */}
+              <div className="space-y-2 pt-1">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                  Property / Business Type *
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Select whether this is a restaurant (table dining) or hotel (room service dining):
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div
+                    onClick={() => setNewBusinessType("restaurant")}
+                    className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                      newBusinessType === "restaurant"
+                        ? "border-orange-500 bg-orange-50/70 shadow-xs ring-1 ring-orange-500"
+                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        <UtensilsCrossed className="h-4 w-4 text-orange-600 shrink-0" />
+                        Restaurant / Cafe
+                      </span>
+                      {newBusinessType === "restaurant" && (
+                        <CheckCircle className="h-4 w-4 text-orange-600 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-tight">
+                      Table Dining, Waiter Calls, QR scanners on Dining Tables (Table 1, Table 2...).
+                    </p>
+                  </div>
+
+                  <div
+                    onClick={() => setNewBusinessType("hotel")}
+                    className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                      newBusinessType === "hotel"
+                        ? "border-indigo-500 bg-indigo-50/70 shadow-xs ring-1 ring-indigo-500"
+                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        <Hotel className="h-4 w-4 text-indigo-600 shrink-0" />
+                        Hotel & Resort
+                      </span>
+                      {newBusinessType === "hotel" && (
+                        <CheckCircle className="h-4 w-4 text-indigo-600 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-tight">
+                      In-Room Dining, Room Service, QR scanners placed in Guest Rooms (Room 101, Room 102...).
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* Module & Role Permissions Selection */}
               <div className="space-y-2 pt-1">

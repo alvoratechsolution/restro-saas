@@ -131,8 +131,8 @@ export default function RestaurantSlugPage({ params }: { params: Promise<{ resta
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full blur-[140px]" style={{ backgroundColor: `${primaryCol}10` }} />
 
         <div className="z-10 relative">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-white font-black text-2xl shadow-xl shadow-orange-500/10 mb-3" style={{ background: `linear-gradient(to top right, ${primaryCol}, #f59e0b)` }}>
-            {restaurant.name.charAt(0)}
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-xl shadow-orange-500/10 mb-3" style={{ background: `linear-gradient(to top right, ${primaryCol}, #f59e0b)` }}>
+            <UtensilsCrossed className="h-7 w-7 text-white" />
           </div>
           <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight">{restaurant.name}</h1>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400 font-semibold mt-2.5">

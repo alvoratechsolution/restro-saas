@@ -49,7 +49,7 @@ export default function TablesPage() {
     success: boolean;
     tables: Table[];
     qrcodes: QRCode[];
-    restaurant?: { name: string };
+    restaurant?: { name: string; slug?: string };
   }>({
     queryKey: ["admin", "tables"],
     queryFn: () => apiFetch("/api/admin/tables"),
@@ -730,11 +730,24 @@ export default function TablesPage() {
 
       {/* Add Table Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
-            <div className="p-6 border-b border-slate-850 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Add Dining Table</h2>
-              <button onClick={resetForm} className="text-slate-400 hover:text-white cursor-pointer">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-orange-50 border border-orange-200 rounded-xl text-orange-600">
+                  <TableProperties className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">Add Dining Table</h2>
+                  <p className="text-[11px] text-slate-500">Configure number & seating</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -746,6 +759,8 @@ export default function TablesPage() {
                 placeholder="e.g. 1, 2, 35 or T-1"
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
+                className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                labelClassName="text-slate-700 font-bold text-xs"
                 required
               />
 
@@ -756,21 +771,23 @@ export default function TablesPage() {
                 min={1}
                 value={seatingCapacity}
                 onChange={(e) => setSeatingCapacity(Number(e.target.value))}
+                className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:bg-white focus:border-orange-500"
+                labelClassName="text-slate-700 font-bold text-xs"
                 required
               />
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <Button
                   type="button"
                   onClick={resetForm}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold flex items-center gap-2 cursor-pointer"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-orange-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Save Table
@@ -783,12 +800,13 @@ export default function TablesPage() {
 
       {/* View QR Code Modal overlay */}
       {viewingTable && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-850/85 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6 relative animate-in fade-in-50 zoom-in-95 duration-150 text-center space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl p-6 relative animate-in fade-in-50 zoom-in-95 duration-150 text-center space-y-4">
             <div className="absolute top-4 right-4">
               <button
+                type="button"
                 onClick={() => setViewingTable(null)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -796,39 +814,40 @@ export default function TablesPage() {
 
             <div className="pt-2 text-center space-y-3">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
                   {response?.restaurant?.name || "Our Restaurant"}
                 </p>
-                <h3 className="text-2xl font-black text-white mt-0.5">TABLE {viewingTable.number}</h3>
+                <h3 className="text-2xl font-black text-slate-900 mt-0.5">TABLE {viewingTable.number}</h3>
               </div>
 
-              <div className="bg-white p-3 rounded-2xl inline-block shadow-md">
+              <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-2xl inline-block shadow-inner">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={viewingTable.qrUrl} alt="Preview QR" className="h-52 w-52 mx-auto" />
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs text-slate-400 max-w-[260px] mx-auto leading-relaxed">
+                <p className="text-xs text-slate-500 max-w-[260px] mx-auto leading-relaxed">
                   Guests scan this QR to view the menu, select items & pay directly from their phone.
                 </p>
 
                 <div className="flex items-center justify-center gap-2">
                   <a
-                    href={`/tasty-bites/table/${viewingTable.number}`}
+                    href={`/${response?.restaurant?.slug || "tasty-bites"}/table/${viewingTable.number}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-orange-500/20 transition-colors"
+                    className="text-xs bg-orange-50 border border-orange-200 text-orange-600 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-orange-100 transition-colors"
                   >
                     <ExternalLink className="h-3.5 w-3.5" /> Test Menu View
                   </a>
                   <button
+                    type="button"
                     onClick={() => {
                       const domain = process.env.NEXT_PUBLIC_APP_URL || "https://restro-saas-website.vercel.app";
-                      const fullUrl = `${domain}/tasty-bites/table/${viewingTable.number}`;
+                      const fullUrl = `${domain}/${response?.restaurant?.slug || "tasty-bites"}/table/${viewingTable.number}`;
                       navigator.clipboard.writeText(fullUrl);
                       toast.success("Copied QR Menu URL to clipboard!");
                     }}
-                    className="text-xs bg-slate-800 border border-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-slate-700 transition-colors cursor-pointer"
+                    className="text-xs bg-slate-100 border border-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     <Copy className="h-3.5 w-3.5" /> Copy URL
                   </button>
@@ -837,7 +856,7 @@ export default function TablesPage() {
             </div>
 
             {/* Action buttons in Modal */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
+            <div className="space-y-2 pt-3 border-t border-slate-100">
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={() =>
@@ -847,7 +866,7 @@ export default function TablesPage() {
                       viewingTable.qrUrl
                     )
                   }
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2 cursor-pointer shadow-md"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-emerald-600/20"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Stand Graphic
@@ -855,9 +874,9 @@ export default function TablesPage() {
 
                 <Button
                   onClick={() => downloadRawQR(viewingTable.number, viewingTable.qrUrl)}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center justify-center gap-1.5 py-2 border border-slate-700 cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 cursor-pointer"
                 >
-                  <Download className="h-3.5 w-3.5 text-orange-400" />
+                  <Download className="h-3.5 w-3.5 text-orange-500" />
                   Raw QR (.png)
                 </Button>
               </div>
@@ -865,14 +884,14 @@ export default function TablesPage() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => handlePrint(viewingTable.qrUrl, viewingTable.number)}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2 cursor-pointer shadow-md"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 py-2.5 rounded-xl cursor-pointer shadow-md shadow-orange-500/20"
                 >
                   <Printer className="h-3.5 w-3.5" />
                   Print Sign
                 </Button>
                 <Button
                   onClick={() => setViewingTable(null)}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 cursor-pointer"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 rounded-xl cursor-pointer"
                 >
                   Close
                 </Button>
