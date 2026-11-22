@@ -19,6 +19,11 @@ const RestaurantSchema = new Schema(
     address: { type: String },
     hasKitchen: { type: Boolean, default: true },
     hasStaff: { type: Boolean, default: true },
+    businessType: {
+      type: String,
+      enum: ["restaurant", "hotel"],
+      default: "restaurant",
+    },
     enabledModules: {
       type: [String],
       default: ["admin", "kitchen", "staff"],

@@ -1,9 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 const Restaurant = require("../models/Restaurant");
+const Branch = require("../models/Branch");
 const Category = require("../models/Category");
 const MenuItem = require("../models/MenuItem");
+const Variant = require("../models/Variant");
+const Addon = require("../models/Addon");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Theme = require("../models/Theme");
 const Coupon = require("../models/Coupon");
 const Table = require("../models/Table");
@@ -12,6 +17,7 @@ const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
 const Notification = require("../models/Notification");
 const Lead = require("../models/Lead");
+const { seedMasterMenuForRestaurant } = require("../data/masterMenu");
 
 
 // 1. RESOLVE RESTAURANT SLUG & MENU
@@ -20,8 +26,8 @@ router.get("/menu", async (req, res) => {
     const { slug, tableNumber } = req.query;
     if (!slug) return res.status(400).json({ error: "Slug is required" });
 
-    // Look for restaurant by slug first
-    const restaurant = await Restaurant.findOne({ slug }).populate("subscriptionPlan");
+    // Look for restaurant by slug first (lean query for maximum speed)
+    const restaurant = await Restaurant.findOne({ slug }).populate("subscriptionPlan").lean();
     if (!restaurant) return res.status(404).json({ success: false, error: "Restaurant not found" });
 
     // If restaurant is suspended or inactive, return closed status cleanly for customer scanner
@@ -42,48 +48,70 @@ router.get("/menu", async (req, res) => {
       });
     }
 
-    let branchId = null;
-    let settings = null;
-    if (tableNumber) {
-      const cleanTable = decodeURIComponent(tableNumber).trim();
-      let table = await Table.findOne({
-        restaurantId: restaurant._id,
-        tableNumber: { $regex: new RegExp(`^${cleanTable.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, "i") }
-      });
-      if (!table) {
-        table = await Table.findOne({ restaurantId: restaurant._id });
-      }
-      if (table) {
-        branchId = table.branchId;
-        settings = await Settings.findOne({ branchId });
-      }
-    }
+    const cleanTable = tableNumber ? decodeURIComponent(tableNumber).trim() : null;
 
-    if (!settings) {
-      settings = await Settings.findOne({ restaurantId: restaurant._id }) || {
-        currency: "INR",
-        cgstRate: 2.5,
-        sgstRate: 2.5,
-        enableSoundAlerts: true,
-      };
-    }
+    // Parallel optimized query execution: Fetch all required data in a single parallel roundtrip
+    const [tableDoc, defaultBranch, themeDoc, settingsDoc, initialCategories, initialMenuItems] = await Promise.all([
+      cleanTable
+        ? Table.findOne({
+            restaurantId: restaurant._id,
+            tableNumber: { $regex: new RegExp(`^${cleanTable.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, "i") },
+          }).lean()
+        : null,
+      Branch.findOne({ restaurantId: restaurant._id, isActive: true }).select("_id").lean(),
+      Theme.findOne({ restaurantId: restaurant._id }).lean(),
+      Settings.findOne({ restaurantId: restaurant._id }).lean(),
+      Category.find({ restaurantId: restaurant._id, isActive: true }).sort({ sortOrder: 1, name: 1 }).lean(),
+      MenuItem.find({ restaurantId: restaurant._id, isActive: true })
+        .populate("variants")
+        .populate("addons")
+        .sort({ name: 1 })
+        .lean(),
+    ]);
 
-    const theme = await Theme.findOne({ restaurantId: restaurant._id }) || {
+    let branchId = tableDoc?.branchId || defaultBranch?._id || null;
+    let settings = settingsDoc || {
+      currency: "INR",
+      cgstRate: 2.5,
+      sgstRate: 2.5,
+      enableSoundAlerts: true,
+    };
+
+    const theme = themeDoc || {
       primaryColor: "#ea580c",
       secondaryColor: "#1e293b",
       fontFamily: "Plus Jakarta Sans",
     };
 
-    const categories = await Category.find({ restaurantId: restaurant._id, isActive: true }).sort({ sortOrder: 1, name: 1 });
-    const menuItems = await MenuItem.find({ restaurantId: restaurant._id, isActive: true })
-      .populate("variants")
-      .populate("addons")
-      .sort({ name: 1 });
+    let categories = initialCategories;
+    let menuItems = initialMenuItems;
 
-    const restaurantObj = restaurant.toObject();
+    // Auto-seed complete Master Catalog (28 categories, 189 dishes) if brand-new restaurant or empty menu
+    if (categories.length === 0 || menuItems.length === 0) {
+      try {
+        await seedMasterMenuForRestaurant(restaurant._id);
+        const [freshCategories, freshMenuItems] = await Promise.all([
+          Category.find({ restaurantId: restaurant._id, isActive: true }).sort({ sortOrder: 1, name: 1 }).lean(),
+          MenuItem.find({ restaurantId: restaurant._id, isActive: true })
+            .populate("variants")
+            .populate("addons")
+            .sort({ name: 1 })
+            .lean(),
+        ]);
+        categories = freshCategories;
+        menuItems = freshMenuItems;
+      } catch (seedErr) {
+        console.error("Auto-seed master menu error:", seedErr);
+      }
+    }
+
+    const restaurantObj = { ...restaurant };
     if (branchId) {
       restaurantObj.branchId = branchId;
     }
+
+    // Set fast HTTP caching header so mobile browsers load instantly on subsequent visits
+    res.set("Cache-Control", "private, max-age=10, stale-while-revalidate=30");
 
     return res.json({ success: true, restaurant: restaurantObj, theme, categories, menuItems, settings });
   } catch (error) {
@@ -607,7 +635,7 @@ router.get("/active-order", async (req, res) => {
   }
 });
 
-// 8. CALL WAITER / STAFF ASSISTANCE
+// 8. CALL SERVICE / STAFF ASSISTANCE (FOR RESTAURANT TABLES & HOTEL ROOMS)
 router.post("/call-waiter", async (req, res) => {
   try {
     const { restaurantId, branchId, tableNumber, reason, customerName } = req.body;
@@ -620,34 +648,54 @@ router.post("/call-waiter", async (req, res) => {
       return res.status(403).json({
         success: false,
         isSuspended: true,
-        error: "This restaurant is currently closed.",
+        error: "This restaurant / service is currently closed.",
       });
     }
 
     const cleanTable = decodeURIComponent(tableNumber).trim();
 
+    // Safely resolve branch to prevent CastError if branchId is empty string or not an ObjectId
+    let validBranchId = null;
+    if (branchId && mongoose.Types.ObjectId.isValid(branchId)) {
+      validBranchId = branchId;
+    } else {
+      const defaultBranch = await Branch.findOne({ restaurantId: restaurant._id, isActive: true });
+      if (defaultBranch) validBranchId = defaultBranch._id;
+    }
+
+    const isHotel = restaurant.businessType === "hotel";
+    const unitLabel = isHotel ? "Room" : "Table";
+
     await Notification.create({
-      restaurantId,
-      branchId,
-      title: "🛎️ Waiter Assistance Requested",
-      message: `Table ${cleanTable} (${customerName || "Guest"}) requested assistance: ${reason || "General Assistance"}`,
+      restaurantId: restaurant._id,
+      ...(validBranchId ? { branchId: validBranchId } : {}),
+      title: "🛎️ Staff Assistance Requested",
+      message: `${unitLabel} ${cleanTable} (${customerName || "Guest"}) requested assistance: ${reason || "Service Needed"}`,
       type: "waiter_call",
     });
 
     const io = req.app.get("io");
-    if (io && branchId) {
-      io.to(branchId.toString()).emit("waiter-called", {
+    if (io) {
+      const payload = {
         tableNumber: cleanTable,
+        unitLabel,
         customerName: customerName || "Guest",
-        reason: reason || "General Assistance",
+        reason: reason || "Service Needed",
         time: new Date().toLocaleTimeString(),
-      });
+      };
+      if (validBranchId) {
+        io.to(validBranchId.toString()).emit("waiter-called", payload);
+      }
+      io.emit("waiter-called", payload);
     }
 
-    return res.json({ success: true, message: `Waiter alerted for Table ${cleanTable}!` });
+    return res.json({
+      success: true,
+      message: `Staff alerted for ${unitLabel} ${cleanTable}!`,
+    });
   } catch (error) {
-    console.error("Call waiter error:", error);
-    return res.status(500).json({ error: "Failed to call waiter" });
+    console.error("Call staff assistance error:", error);
+    return res.status(500).json({ error: error.message || "Failed to call staff" });
   }
 });
 

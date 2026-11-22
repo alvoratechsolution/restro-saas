@@ -18,7 +18,9 @@ const Coupon = require("../models/Coupon");
 const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
 const Restaurant = require("../models/Restaurant");
+const Notification = require("../models/Notification");
 const { sendStaffInviteEmail } = require("../services/email");
+const { seedMasterMenuForRestaurant } = require("../data/masterMenu");
 
 // Apply authentication middleware to all sub-routes here
 router.use(checkAuth(["RESTAURANT_ADMIN", "BRANCH_MANAGER", "KITCHEN", "STAFF", "CASHIER"]));
@@ -133,7 +135,15 @@ router.get("/dashboard", async (req, res) => {
 // 2. CATEGORIES
 router.get("/categories", checkFeature("menu"), async (req, res) => {
   try {
-    const categories = await Category.find({ restaurantId: req.user.restaurantId }).sort({ sortOrder: 1, name: 1 });
+    let categories = await Category.find({ restaurantId: req.user.restaurantId }).sort({ sortOrder: 1, name: 1 });
+    if (categories.length === 0) {
+      try {
+        await seedMasterMenuForRestaurant(req.user.restaurantId);
+        categories = await Category.find({ restaurantId: req.user.restaurantId }).sort({ sortOrder: 1, name: 1 });
+      } catch (seedErr) {
+        console.error("Auto-seed categories error:", seedErr);
+      }
+    }
     return res.json({ success: true, data: categories });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch categories" });
@@ -191,14 +201,44 @@ router.delete("/categories", checkFeature("menu"), async (req, res) => {
 // 3. MENU ITEMS
 router.get("/menu", checkFeature("menu"), async (req, res) => {
   try {
-    const menuItems = await MenuItem.find({ restaurantId: req.user.restaurantId })
+    let menuItems = await MenuItem.find({ restaurantId: req.user.restaurantId })
       .populate("categoryId")
       .populate("variants")
       .populate("addons")
       .sort({ name: 1 });
+
+    if (menuItems.length === 0) {
+      try {
+        await seedMasterMenuForRestaurant(req.user.restaurantId);
+        menuItems = await MenuItem.find({ restaurantId: req.user.restaurantId })
+          .populate("categoryId")
+          .populate("variants")
+          .populate("addons")
+          .sort({ name: 1 });
+      } catch (seedErr) {
+        console.error("Auto-seed menu error:", seedErr);
+      }
+    }
+
     return res.json({ success: true, data: menuItems });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch menu items" });
+  }
+});
+
+// Explicit endpoint to seed or reset the complete 28-category 189-item Master Catalog
+router.post("/menu/load-master-menu", checkFeature("menu"), async (req, res) => {
+  try {
+    const { overwrite } = req.body;
+    const result = await seedMasterMenuForRestaurant(req.user.restaurantId, { overwrite: Boolean(overwrite) });
+    return res.json({
+      success: true,
+      message: `Master Menu loaded successfully (${result.categoriesCount} categories, ${result.itemsCount} dishes)!`,
+      result,
+    });
+  } catch (error) {
+    console.error("Load master menu error:", error);
+    return res.status(500).json({ error: error.message || "Failed to load master menu" });
   }
 });
 
@@ -343,7 +383,7 @@ router.get("/tables", checkFeature("qr-tables"), async (req, res) => {
       success: true,
       tables,
       qrcodes,
-      restaurant: restaurant ? { name: restaurant.name, address: restaurant.address, phone: restaurant.phone } : null
+      restaurant: restaurant ? { name: restaurant.name, slug: restaurant.slug, address: restaurant.address, phone: restaurant.phone } : null
     });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch tables" });
@@ -683,7 +723,7 @@ router.get("/orders", checkFeature("orders"), async (req, res) => {
     return res.json({
       success: true,
       data: finalOrders,
-      restaurant: restaurant ? { name: restaurant.name, address: restaurant.address, phone: restaurant.phone } : null
+      restaurant: restaurant ? { name: restaurant.name, slug: restaurant.slug, address: restaurant.address, phone: restaurant.phone } : null
     });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch orders" });
@@ -731,6 +771,57 @@ router.get("/restaurant-info", async (req, res) => {
     return res.json({ success: true, data: restaurant });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch restaurant details" });
+  }
+});
+
+// 9. NOTIFICATIONS & WAITER CALLS
+router.get("/notifications", async (req, res) => {
+  try {
+    const notifs = await Notification.find({ restaurantId: req.user.restaurantId })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .lean();
+    const unreadCount = await Notification.countDocuments({
+      restaurantId: req.user.restaurantId,
+      isRead: false,
+    });
+    return res.json({ success: true, data: notifs, unreadCount });
+  } catch (error) {
+    console.error("Fetch notifications error:", error);
+    return res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+});
+
+router.put("/notifications/:id/read", async (req, res) => {
+  try {
+    await Notification.findOneAndUpdate(
+      { _id: req.params.id, restaurantId: req.user.restaurantId },
+      { isRead: true }
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to mark notification as read" });
+  }
+});
+
+router.put("/notifications/mark-all-read", async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { restaurantId: req.user.restaurantId, isRead: false },
+      { isRead: true }
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to mark all as read" });
+  }
+});
+
+router.delete("/notifications/clear", async (req, res) => {
+  try {
+    await Notification.deleteMany({ restaurantId: req.user.restaurantId });
+    return res.json({ success: true, message: "Cleared all notifications" });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to clear notifications" });
   }
 });
 

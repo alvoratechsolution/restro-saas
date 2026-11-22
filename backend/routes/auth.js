@@ -9,6 +9,7 @@ const Settings = require("../models/Settings");
 const Theme = require("../models/Theme");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const { sendOtpEmail, sendWelcomeRegistrationEmail } = require("../services/email");
+const { seedMasterMenuForRestaurant } = require("../data/masterMenu");
 
 function generateSlug(text) {
   return text
@@ -35,6 +36,7 @@ router.post("/register", async (req, res) => {
       hasKitchen,
       hasStaff,
       enabledModules,
+      businessType,
     } = req.body;
 
     if (!restaurantName || !email || !password) {
@@ -103,6 +105,7 @@ router.post("/register", async (req, res) => {
       subscriptionEndsAt: selectedEndsAt,
       hasKitchen: isKitchenEnabled,
       hasStaff: isStaffEnabled,
+      businessType: businessType === "hotel" ? "hotel" : "restaurant",
       enabledModules: assignedModules,
     });
 
@@ -148,6 +151,14 @@ router.post("/register", async (req, res) => {
       secondaryColor: "#1e293b",
       fontFamily: "Plus Jakarta Sans",
     });
+
+    // Automatically provision full Master Menu (28 categories & 189 dishes)
+    try {
+      await seedMasterMenuForRestaurant(restaurant._id);
+      console.log(`[Master Menu] Provisioned 28 categories and 189 items for restaurant '${restaurant.name}'`);
+    } catch (seedErr) {
+      console.warn("[Master Menu Seed Notice]:", seedErr.message);
+    }
 
     // Send Welcome Email with credentials and plan details via Nodemailer
     let mailResult = { success: false, skipped: true };

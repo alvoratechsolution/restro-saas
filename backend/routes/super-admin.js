@@ -46,12 +46,14 @@ router.patch("/restaurants", async (req, res) => {
       hasKitchen,
       hasStaff,
       enabledModules,
+      businessType,
     } = req.body;
     const updateFields = {};
     if (status !== undefined) updateFields.status = status;
     if (isActive !== undefined) updateFields.isActive = isActive;
     if (isSuspended !== undefined) updateFields.isSuspended = isSuspended;
     if (customDomain !== undefined) updateFields.customDomain = customDomain;
+    if (businessType !== undefined) updateFields.businessType = businessType;
     if (subscriptionEndsAt !== undefined) {
       updateFields.subscriptionEndsAt = subscriptionEndsAt ? new Date(subscriptionEndsAt) : null;
     }
