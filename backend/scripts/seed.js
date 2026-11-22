@@ -89,10 +89,11 @@ async function seed() {
 
     // 3. Create Super Admin User
     const usersCollection = mongoose.connection.collection("users");
-    const superAdminPassword = await bcrypt.hash("SuperAdminPassword123!", 10);
+    const adminPass = process.env.SUPER_ADMIN_PASSWORD || "AdminPass@" + Math.random().toString(36).substring(2, 10);
+    const superAdminPassword = await bcrypt.hash(adminPass, 10);
     const superAdmin = {
       name: "System Super Admin",
-      email: "superadmin@servedesk.com",
+      email: (process.env.SUPER_ADMIN_EMAIL || "superadmin@servedesk.com").toLowerCase().trim(),
       password: superAdminPassword,
       role: "SUPER_ADMIN",
       isActive: true,

@@ -585,15 +585,16 @@ async function run() {
   // 2. Ensure Super Admin
   const superAdminExists = await User.findOne({ role: "SUPER_ADMIN" });
   if (!superAdminExists) {
-    const hashed = await bcrypt.hash("SuperAdminPassword123!", 10);
+    const adminPass = process.env.SUPER_ADMIN_PASSWORD || "AdminPass@" + Math.random().toString(36).substring(2, 10);
+    const hashed = await bcrypt.hash(adminPass, 10);
     await User.create({
       name: "ServeDesk Super Admin",
-      email: "superadmin@servedesk.com",
+      email: (process.env.SUPER_ADMIN_EMAIL || "superadmin@servedesk.com").toLowerCase().trim(),
       password: hashed,
       role: "SUPER_ADMIN",
       isActive: true,
     });
-    console.log("Super Admin created: superadmin@servedesk.com");
+    console.log("Super Admin created.");
   }
 
   // 3. Find or create Restaurant

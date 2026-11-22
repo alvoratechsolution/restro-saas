@@ -35,18 +35,33 @@ const ensureInitialData = async () => {
     const SubscriptionPlan = require("../models/SubscriptionPlan");
     const bcrypt = require("bcrypt");
 
-    // 1. Ensure Super Admin exists
-    const superAdminExists = await User.findOne({ role: "SUPER_ADMIN" });
-    if (!superAdminExists) {
-      const hashedPassword = await bcrypt.hash("SuperAdminPassword123!", 10);
+    // 1. Ensure Super Admin exists or sync with environment variables
+    const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || "superadmin@servedesk.com").toLowerCase().trim();
+    const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
+
+    let superAdmin = await User.findOne({ role: "SUPER_ADMIN" });
+    if (!superAdmin) {
+      const defaultPass = superAdminPassword || "AdminPass@" + Math.random().toString(36).substring(2, 10);
+      const hashedPassword = await bcrypt.hash(defaultPass, 10);
       await User.create({
         name: "ServeDesk Super Admin",
-        email: "superadmin@servedesk.com",
+        email: superAdminEmail,
         password: hashedPassword,
         role: "SUPER_ADMIN",
         isActive: true,
       });
-      console.log("[DB Init] Created default Super Admin: superadmin@servedesk.com / SuperAdminPassword123!");
+      console.log(`[DB Init] Super Admin ready: ${superAdminEmail}`);
+    } else if (superAdminPassword) {
+      // Sync password if explicitly specified in environment
+      const isMatch = await bcrypt.compare(superAdminPassword, superAdmin.password);
+      if (!isMatch) {
+        superAdmin.password = await bcrypt.hash(superAdminPassword, 10);
+        if (process.env.SUPER_ADMIN_EMAIL) {
+          superAdmin.email = superAdminEmail;
+        }
+        await superAdmin.save();
+        console.log(`[DB Init] Super Admin credentials synced successfully.`);
+      }
     }
 
     // 2. Ensure default Subscription Plans exist
