@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
 import useCart from "@/store/useCart";
 import useSocket from "@/hooks/useSocket";
-import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 import {
   UtensilsCrossed,
   BellRing,
@@ -667,25 +667,27 @@ export default function TableOrderingPage({
         setCartOpen(false);
         setActiveOrderId(res.orderId);
 
-        await Swal.fire({
-          icon: "success",
-          title: res.isAppended ? "🎉 Dishes Added to Table Bill!" : "🎉 Order Sent to Kitchen!",
-          text: res.isAppended
-            ? `Dishes added to Table ${tableNumber} bill! (Consolidated Total: ₹${Math.round(res.total)})`
-            : `Table ${tableNumber} order #${res.orderId.slice(-5).toUpperCase()} is being prepared!`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        toast.success(
+          res.isAppended
+            ? `Dishes added to Table ${tableNumber} bill!`
+            : `Order sent to kitchen! Being prepared.`,
+          {
+            icon: "👨‍🍳",
+            duration: 3000,
+            style: {
+              borderRadius: "16px",
+              background: "#0f172a",
+              color: "#fff",
+              fontSize: "12px",
+              fontWeight: "bold",
+            },
+          }
+        );
 
         router.push(`/${restaurantSlug}/table/${tableNumber}/track/${res.orderId}`);
       }
     } catch (err: unknown) {
-      Swal.fire({
-        icon: "error",
-        title: "Order Failed",
-        text: (err as Error).message || "Failed to place order. Please try again.",
-        confirmButtonColor: primaryCol,
-      });
+      toast.error((err as Error).message || "Failed to place order. Please try again.");
     } finally {
       setSubmittingOrder(false);
     }

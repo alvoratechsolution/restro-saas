@@ -63,6 +63,9 @@ export default function Navbar() {
           <a href="#faq" className="hover:text-orange-400 transition-colors">
             FAQ
           </a>
+          <a href="tel:8385973582" className="text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1 text-xs font-bold bg-orange-500/10 px-3 py-1 rounded-full border border-orange-500/20">
+            📞 +91 83859 73582
+          </a>
         </nav>
 
         {/* Action Buttons */}
@@ -143,6 +146,13 @@ export default function Navbar() {
                 className="py-2 hover:text-orange-400"
               >
                 FAQ
+              </a>
+              <a
+                href="tel:8385973582"
+                onClick={() => setMobileOpen(false)}
+                className="py-2 text-orange-400 font-bold flex items-center gap-2"
+              >
+                📞 Contact: +91 83859 73582 / 85628 24281
               </a>
             </nav>
 

@@ -92,14 +92,31 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Col 4: Trust / Security */}
+        {/* Col 4: Trust / Security & Contact Support */}
         <div>
           <h4 className="font-extrabold text-white text-xs uppercase tracking-wider mb-4">
-            System Reliability
+            Contact & Support
           </h4>
-          <p className="text-xs text-slate-400 font-medium leading-relaxed mb-3">
-            Built with MERN Stack + Next.js 15, TanStack Query, Zustand, Socket.io, and MongoDB Atlas.
-          </p>
+          <div className="space-y-2.5 text-xs text-slate-400 font-medium leading-relaxed mb-4">
+            <p className="flex items-center gap-2">
+              <span className="text-orange-400 font-bold">Phone:</span>
+              <a href="tel:8385973582" className="text-slate-200 hover:text-orange-400 font-semibold transition-colors">
+                +91 83859 73582
+              </a>
+            </p>
+            <p className="flex items-center gap-2">
+              <span className="text-orange-400 font-bold">Helpline:</span>
+              <a href="tel:8562824281" className="text-slate-200 hover:text-orange-400 font-semibold transition-colors">
+                +91 85628 24281
+              </a>
+            </p>
+            <p className="flex items-center gap-2">
+              <span className="text-orange-400 font-bold">Email:</span>
+              <a href="mailto:alvora.tech.solution@gmail.com" className="text-slate-200 hover:text-orange-400 font-semibold transition-colors truncate">
+                alvora.tech.solution@gmail.com
+              </a>
+            </p>
+          </div>
           <div className="inline-flex items-center gap-2 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> All Systems Operational
           </div>

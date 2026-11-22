@@ -159,30 +159,31 @@ export default function TablesPage() {
   const downloadStandImage = (restaurantName: string, tNum: string, qrUrl: string) => {
     const canvas = document.createElement("canvas");
     canvas.width = 800;
-    canvas.height = 1100;
+    canvas.height = 1180;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Background gradient
-    const gradient = ctx.createLinearGradient(0, 0, 800, 1100);
-    gradient.addColorStop(0, "#0a0e17");
-    gradient.addColorStop(0.5, "#131b2c");
-    gradient.addColorStop(1, "#070a10");
+    // Background gradient - Luxury deep dark glassmorphic tone
+    const gradient = ctx.createLinearGradient(0, 0, 800, 1180);
+    gradient.addColorStop(0, "#080c14");
+    gradient.addColorStop(0.35, "#0f172a");
+    gradient.addColorStop(0.7, "#141d33");
+    gradient.addColorStop(1, "#070a11");
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 800, 1100);
+    ctx.fillRect(0, 0, 800, 1180);
 
-    // Border Accent
-    ctx.lineWidth = 6;
+    // Golden / Orange Premium Accent Outer Frame
+    ctx.lineWidth = 5;
     ctx.strokeStyle = "#ea580c";
     ctx.beginPath();
-    ctx.roundRect(40, 40, 720, 1020, 36);
+    ctx.roundRect(35, 35, 730, 1110, 36);
     ctx.stroke();
 
-    // Inner subtle glow border
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+    // Inner sleek luxury line
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(251, 146, 60, 0.35)";
     ctx.beginPath();
-    ctx.roundRect(50, 50, 700, 1000, 30);
+    ctx.roundRect(46, 46, 708, 1088, 30);
     ctx.stroke();
 
     const img = new Image();
@@ -190,55 +191,78 @@ export default function TablesPage() {
     img.onload = () => {
       // Header Restaurant Name
       ctx.textAlign = "center";
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "800 22px sans-serif";
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "800 22px 'Plus Jakarta Sans', sans-serif";
       ctx.letterSpacing = "4px";
-      ctx.fillText((restaurantName || "OUR RESTAURANT").toUpperCase(), 400, 115);
+      ctx.fillText((restaurantName || "OUR RESTAURANT").toUpperCase(), 400, 105);
 
-      // Table Badge Box
-      ctx.fillStyle = "#ea580c";
+      // Table Badge Box (Glowing rounded pill)
+      const badgeGrad = ctx.createLinearGradient(240, 130, 560, 205);
+      badgeGrad.addColorStop(0, "#ea580c");
+      badgeGrad.addColorStop(1, "#f97316");
+      ctx.fillStyle = badgeGrad;
       ctx.beginPath();
-      ctx.roundRect(260, 150, 280, 68, 34);
+      ctx.roundRect(240, 130, 320, 72, 36);
       ctx.fill();
 
       // Table Number text
       ctx.fillStyle = "#ffffff";
-      ctx.font = "900 34px sans-serif";
-      ctx.fillText(`TABLE ${tNum}`, 400, 196);
+      ctx.font = "900 36px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "2px";
+      ctx.fillText(`TABLE ${tNum}`, 400, 180);
 
       // Instruction heading
       ctx.fillStyle = "#ffffff";
-      ctx.font = "800 32px sans-serif";
-      ctx.fillText("Scan QR Code to Order", 400, 285);
+      ctx.font = "800 32px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "0.5px";
+      ctx.fillText("Scan QR Code to Order", 400, 260);
 
-      // QR Code Container Box (Crisp White Card)
+      // QR Code Container Box (Crisp Ultra-Clean White Card with Soft Shadow)
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.roundRect(160, 325, 480, 480, 28);
+      ctx.roundRect(160, 295, 480, 480, 32);
       ctx.fill();
 
       // Border on QR Box
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = "#fdba74";
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#fed7aa";
       ctx.stroke();
 
       // Render QR Image
-      ctx.drawImage(img, 185, 350, 430, 430);
+      ctx.drawImage(img, 185, 320, 430, 430);
 
       // Sub-instructions
-      ctx.fillStyle = "#cbd5e1";
-      ctx.font = "600 22px sans-serif";
-      ctx.fillText("Browse Menu · Customize · Order & Pay", 400, 865);
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "700 22px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("Browse Menu · Customize · Order & Pay", 400, 835);
 
-      ctx.fillStyle = "#f97316";
-      ctx.font = "bold 18px sans-serif";
-      ctx.fillText("⚡ Instant Digital Dining · No App Required", 400, 915);
+      ctx.fillStyle = "#fb923c";
+      ctx.font = "bold 17px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("⚡ Instant Contactless Dining · No App Required", 400, 875);
 
-      // Footer branding
-      ctx.fillStyle = "#64748b";
-      ctx.font = "800 15px sans-serif";
+      // Stylish Divider Line
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.fillRect(200, 915, 400, 1.5);
+
+      // Footer: Powered by ServeDesk & Company Contact Support
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 16px 'Plus Jakarta Sans', sans-serif";
       ctx.letterSpacing = "2px";
-      ctx.fillText("POWERED BY SERVEDESK", 400, 990);
+      ctx.fillText("SERVEDESK · BY ALVORA TECH SOLUTION", 400, 955);
+
+      // Helpline & Support info on Table Stand
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "600 15px 'Plus Jakarta Sans', sans-serif";
+      ctx.letterSpacing = "0.5px";
+      ctx.fillText("Support Helpline: +91 85628 24281", 400, 995);
+
+      ctx.fillStyle = "#fdba74";
+      ctx.font = "600 14px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("Email: alvora.tech.solution@gmail.com", 400, 1025);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "500 12px 'Plus Jakarta Sans', sans-serif";
+      ctx.fillText("Scan with Camera / Google Lens / Paytm / WhatsApp", 400, 1070);
 
       // Trigger instant download
       const a = document.createElement("a");
@@ -300,58 +324,59 @@ export default function TablesPage() {
               color: #0f172a;
             }
             .container {
-              border: 4px solid #ea580c;
+              border: 3px solid #ea580c;
               border-radius: 28px;
-              padding: 50px 40px;
+              padding: 40px 32px;
               text-align: center;
               width: 380px;
               box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-              background: radial-gradient(circle at top left, #fff 60%, #fff7ed 100%);
+              background: radial-gradient(circle at top left, #ffffff 60%, #fff7ed 100%);
               display: flex;
               flex-direction: column;
               align-items: center;
               box-sizing: border-box;
             }
             .restaurant-name {
-              font-size: 18px;
+              font-size: 16px;
               font-weight: 800;
               color: #64748b;
               letter-spacing: 0.15em;
-              margin-bottom: 12px;
+              margin-bottom: 10px;
               text-transform: uppercase;
             }
             .badge {
-              background-color: #ea580c;
+              background: linear-gradient(135deg, #ea580c, #f97316);
               color: #ffffff;
-              font-size: 30px;
+              font-size: 26px;
               font-weight: 900;
-              padding: 8px 28px;
+              padding: 8px 30px;
               border-radius: 9999px;
               letter-spacing: 0.05em;
-              box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2);
+              box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
               display: inline-block;
-              margin-bottom: 20px;
+              margin-bottom: 16px;
             }
             .divider {
-              width: 50px;
-              height: 4px;
+              width: 44px;
+              height: 3px;
               background-color: #fdba74;
               border-radius: 2px;
-              margin-bottom: 20px;
+              margin-bottom: 16px;
             }
             .instruction {
-              font-size: 22px;
+              font-size: 20px;
               font-weight: 800;
               color: #0f172a;
-              margin-bottom: 15px;
+              margin-bottom: 14px;
+              letter-spacing: -0.02em;
             }
             .qr-container {
               padding: 12px;
               background: #ffffff;
-              border: 2px solid #e2e8f0;
-              border-radius: 20px;
-              box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-              margin-bottom: 20px;
+              border: 2px solid #fed7aa;
+              border-radius: 22px;
+              box-shadow: 0 10px 20px -3px rgba(234, 88, 12, 0.1);
+              margin-bottom: 16px;
             }
             .qr-container img {
               width: 220px;
@@ -360,18 +385,35 @@ export default function TablesPage() {
             }
             .sub-instruction {
               font-size: 12px;
-              color: #64748b;
-              max-width: 260px;
+              color: #475569;
+              max-width: 280px;
               line-height: 1.5;
-              margin-bottom: 20px;
-              font-weight: 500;
+              margin-bottom: 16px;
+              font-weight: 600;
             }
-            .footer {
+            .support-box {
+              padding-top: 12px;
+              border-top: 1px dashed #cbd5e1;
+              width: 100%;
+              margin-bottom: 6px;
+            }
+            .company-brand {
               font-size: 10px;
-              color: #cbd5e1;
-              font-weight: 650;
+              font-weight: 800;
+              color: #ea580c;
               text-transform: uppercase;
-              letter-spacing: 0.1em;
+              letter-spacing: 0.08em;
+              margin-bottom: 3px;
+            }
+            .support-contact {
+              font-size: 10px;
+              color: #334155;
+              font-weight: 700;
+              line-height: 1.4;
+            }
+            .support-contact span {
+              color: #64748b;
+              font-weight: 500;
             }
           </style>
         </head>
@@ -385,7 +427,11 @@ export default function TablesPage() {
               <img src="${qrUrl}" alt="Table QR" />
             </div>
             <div class="sub-instruction">Browse menu, customize items & pay directly from your phone</div>
-            <div class="footer">Powered by ServeDesk</div>
+            <div class="support-box">
+              <div class="company-brand">ServeDesk · By Alvora Tech Solution</div>
+              <div class="support-contact">Helpline: +91 85628 24281</div>
+              <div class="support-contact"><span>Support:</span> alvora.tech.solution@gmail.com</div>
+            </div>
           </div>
           <script>
             window.onload = function() {
@@ -421,7 +467,11 @@ export default function TablesPage() {
                 <img src="${qr.qrCodeUrl}" alt="Table QR" />
               </div>
               <div class="sub-instruction">Browse menu, customize items & pay directly from your phone</div>
-              <div class="footer">Powered by ServeDesk</div>
+              <div class="support-box">
+                <div class="company-brand">ServeDesk · By Alvora Tech Solution</div>
+                <div class="support-contact">Helpline: +91 85628 24281</div>
+                <div class="support-contact"><span>Support:</span> alvora.tech.solution@gmail.com</div>
+              </div>
             </div>
           </div>
         `;
@@ -433,7 +483,7 @@ export default function TablesPage() {
         <head>
           <title>All Table QR Codes - ${restName}</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
             body {
               margin: 0;
               padding: 0;
@@ -454,58 +504,58 @@ export default function TablesPage() {
                page-break-after: avoid;
             }
             .container {
-              border: 4px solid #ea580c;
+              border: 3px solid #ea580c;
               border-radius: 28px;
-              padding: 50px 40px;
+              padding: 40px 32px;
               text-align: center;
               width: 380px;
               box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-              background: radial-gradient(circle at top left, #fff 60%, #fff7ed 100%);
+              background: radial-gradient(circle at top left, #ffffff 60%, #fff7ed 100%);
               display: flex;
               flex-direction: column;
               align-items: center;
               box-sizing: border-box;
             }
             .restaurant-name {
-              font-size: 18px;
+              font-size: 16px;
               font-weight: 800;
               color: #64748b;
               letter-spacing: 0.15em;
-              margin-bottom: 12px;
+              margin-bottom: 10px;
               text-transform: uppercase;
             }
             .badge {
-              background-color: #ea580c;
+              background: linear-gradient(135deg, #ea580c, #f97316);
               color: #ffffff;
-              font-size: 30px;
+              font-size: 26px;
               font-weight: 900;
-              padding: 8px 28px;
+              padding: 8px 30px;
               border-radius: 9999px;
               letter-spacing: 0.05em;
-              box-shadow: 0 4px 10px rgba(234, 88, 12, 0.2);
+              box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
               display: inline-block;
-              margin-bottom: 20px;
+              margin-bottom: 16px;
             }
             .divider {
-              width: 50px;
-              height: 4px;
+              width: 44px;
+              height: 3px;
               background-color: #fdba74;
               border-radius: 2px;
-              margin-bottom: 20px;
+              margin-bottom: 16px;
             }
             .instruction {
-              font-size: 22px;
+              font-size: 20px;
               font-weight: 800;
               color: #0f172a;
-              margin-bottom: 15px;
+              margin-bottom: 14px;
             }
             .qr-container {
               padding: 12px;
               background: #ffffff;
-              border: 2px solid #e2e8f0;
-              border-radius: 20px;
-              box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-              margin-bottom: 20px;
+              border: 2px solid #fed7aa;
+              border-radius: 22px;
+              box-shadow: 0 10px 20px -3px rgba(234, 88, 12, 0.1);
+              margin-bottom: 16px;
             }
             .qr-container img {
               width: 220px;
@@ -514,18 +564,35 @@ export default function TablesPage() {
             }
             .sub-instruction {
               font-size: 12px;
-              color: #64748b;
-              max-width: 260px;
+              color: #475569;
+              max-width: 280px;
               line-height: 1.5;
-              margin-bottom: 20px;
-              font-weight: 500;
+              margin-bottom: 16px;
+              font-weight: 600;
             }
-            .footer {
+            .support-box {
+              padding-top: 12px;
+              border-top: 1px dashed #cbd5e1;
+              width: 100%;
+              margin-bottom: 6px;
+            }
+            .company-brand {
               font-size: 10px;
-              color: #cbd5e1;
-              font-weight: 650;
+              font-weight: 800;
+              color: #ea580c;
               text-transform: uppercase;
-              letter-spacing: 0.1em;
+              letter-spacing: 0.08em;
+              margin-bottom: 3px;
+            }
+            .support-contact {
+              font-size: 10px;
+              color: #334155;
+              font-weight: 700;
+              line-height: 1.4;
+            }
+            .support-contact span {
+              color: #64748b;
+              font-weight: 500;
             }
             @media print {
               body {

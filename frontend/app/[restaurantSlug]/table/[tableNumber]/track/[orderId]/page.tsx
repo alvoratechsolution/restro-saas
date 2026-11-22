@@ -4,7 +4,7 @@ import React, { use, useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
 import useSocket from "@/hooks/useSocket";
-import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 import {
   Clock,
   CheckCircle2,
@@ -104,13 +104,15 @@ export default function OrderTrackingPage({
     // Listen for order status updates
     socket.on("status-changed", (data: any) => {
       playTrackingChime();
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "info",
-        title: `📢 Status Updated: ${data.status}`,
-        showConfirmButton: false,
-        timer: 4000,
+      toast(`📢 Order Status: ${data.status}`, {
+        icon: "👨‍🍳",
+        style: {
+          borderRadius: "16px",
+          background: "#0f172a",
+          color: "#fff",
+          fontSize: "12px",
+          fontWeight: "bold",
+        },
       });
       queryClient.invalidateQueries({ queryKey: ["customer", "order-tracking", orderId] });
     });
