@@ -106,7 +106,12 @@ export default function TableOrderingPage({
   params: Promise<{ restaurantSlug: string; tableNumber: string }>;
 }) {
   const router = useRouter();
-  const { restaurantSlug, tableNumber } = use(params);
+  const { restaurantSlug, tableNumber: rawTableNumber } = use(params);
+
+  // Decode URL encoded characters and clean redundant prefixes (e.g. "table%202" -> "2", "Table 5" -> "5")
+  const decodedTable = decodeURIComponent(rawTableNumber || "").trim();
+  const cleanTableNumber = decodedTable.replace(/^(table|room)\s*/i, "") || decodedTable;
+  const tableNumber = cleanTableNumber;
 
   // Zustand cart state
   const {
@@ -729,49 +734,39 @@ export default function TableOrderingPage({
       {/* Soft background ambient gradient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-80 bg-gradient-to-b from-orange-100/40 via-amber-50/20 to-transparent pointer-events-none blur-3xl" />
 
-      {/* Premium Dark Navigation Header with Centered Restaurant Identity */}
-      <header className="sticky top-0 z-30 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/90 px-3 sm:px-4 py-2.5 shadow-md backdrop-blur-xl">
+      {/* Premium Dark Mobile-Optimized Navigation Header */}
+      <header className="sticky top-0 z-30 bg-slate-950/95 border-b border-slate-800/80 px-3 sm:px-5 py-2 sm:py-2.5 shadow-lg backdrop-blur-xl">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
-          {/* Left Unit Badge */}
-          <div className="w-16 sm:w-28 flex items-center justify-start shrink-0">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 shadow-inner">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="text-[11px] font-black text-orange-400 tracking-wider uppercase">
-                {unitLabel} {tableNumber}
-              </span>
-            </div>
+          {/* Left: Unit / Table Badge */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 shrink-0">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="text-[11px] sm:text-xs font-black text-orange-400 tracking-wide uppercase whitespace-nowrap">
+              {unitLabel} {tableNumber}
+            </span>
           </div>
 
-          {/* Top Middle: Restaurant Identity in Dark Background */}
-          <div className="flex flex-col items-center justify-center text-center px-1 min-w-0 flex-1">
-            <div className="flex items-center justify-center max-w-full">
-              <h1 className="font-black text-white text-base sm:text-lg tracking-tight leading-none truncate drop-shadow-sm">
-                {restaurant.name}
-              </h1>
-            </div>
-            <div className="flex items-center justify-center gap-1.5 mt-1">
-              <span className="text-[10px] text-slate-400 font-semibold tracking-wide">
-                {unitLabel} {tableNumber} · {serviceLabel}
-              </span>
+          {/* Middle: Clean Restaurant Identity */}
+          <div className="flex-1 min-w-0 text-center px-1">
+            <h1 className="font-black text-white text-sm sm:text-base tracking-tight truncate drop-shadow-sm">
+              {restaurant.name}
+            </h1>
+            <p className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
+              {serviceLabel}
               {verifiedName && verifiedName !== "Guest" && (
-                <span className="text-[10px] text-orange-400 font-bold truncate max-w-[110px]">
-                  · {verifiedName}
-                </span>
+                <span className="text-orange-400 font-semibold ml-1">· {verifiedName}</span>
               )}
-            </div>
+            </p>
           </div>
 
-          {/* Right: Quick Attendant / Waiter Call Button */}
-          <div className="w-16 sm:w-28 flex items-center justify-end shrink-0">
-            <button
-              onClick={() => setWaiterModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold transition-transform active:scale-95 shadow-xs cursor-pointer"
-              title={attendantLabel}
-            >
-              <BellRing className="h-3.5 w-3.5 text-amber-400 animate-pulse shrink-0" />
-              <span className="text-[11px] font-black">{attendantLabel}</span>
-            </button>
-          </div>
+          {/* Right: Call Waiter Button */}
+          <button
+            onClick={() => setWaiterModalOpen(true)}
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold transition-transform active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
+            title={attendantLabel}
+          >
+            <BellRing className="h-3.5 w-3.5 text-amber-400 animate-pulse shrink-0" />
+            <span className="text-[11px] font-black">{attendantLabel}</span>
+          </button>
         </div>
       </header>
 
