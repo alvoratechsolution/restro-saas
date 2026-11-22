@@ -48,6 +48,44 @@ app.use("/api/super-admin", superAdminRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/upload", uploadRoutes);
 
+// Health Check Endpoints (Root & /api/health)
+const getHealthStatus = () => {
+  const mongoose = require("mongoose");
+  const dbStatusMap = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting"
+  };
+  const dbState = mongoose.connection ? mongoose.connection.readyState : 0;
+  return {
+    status: "ok",
+    message: "ServeDesk Backend is active and running",
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    database: {
+      status: dbStatusMap[dbState] || "unknown",
+      readyState: dbState
+    },
+    environment: process.env.NODE_ENV || "development"
+  };
+};
+
+app.get("/health", (req, res) => {
+  res.status(200).json(getHealthStatus());
+});
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json(getHealthStatus());
+});
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "ServeDesk API is live. Hit /api/health for detailed status."
+  });
+});
+
 // Socket.IO Connection Handlers
 io.on("connection", (socket) => {
   console.log("Realtime client connected to backend: " + socket.id);
