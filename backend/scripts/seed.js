@@ -552,7 +552,7 @@ async function seed() {
     const tablesCollection = mongoose.connection.collection("tables");
     const qrcodesCollection = mongoose.connection.collection("qrcodes");
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://restro-saas-website.vercel.app";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.tech";
     const tablesList = [];
     const qrcodesList = [];
 

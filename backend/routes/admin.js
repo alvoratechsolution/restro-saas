@@ -398,7 +398,7 @@ router.post("/tables/bulk-create-35", checkFeature("qr-tables"), async (req, res
     if (!restaurant) return res.status(404).json({ error: "Restaurant not found" });
 
     const totalToEnsure = 35;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.origin || "https://restro-saas-website.vercel.app";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.origin || "https://servedesk.tech";
     const createdTables = [];
 
     for (let i = 1; i <= totalToEnsure; i++) {
@@ -464,7 +464,7 @@ router.post("/tables", checkFeature("qr-tables"), async (req, res) => {
     });
 
     // Generate QR URL based on target app URL
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.origin || "https://restro-saas-website.vercel.app";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.headers.origin || "https://servedesk.tech";
     const qrUrl = `${appUrl}/${restaurant.slug}/table/${tableNumber}`;
 
     const dataUrl = await QRCodeGenerator.toDataURL(qrUrl, {
@@ -490,7 +490,7 @@ router.post("/tables/regenerate-qrs", checkFeature("qr-tables"), async (req, res
     if (!restaurant) return res.status(404).json({ error: "Restaurant not found" });
 
     const tables = await Table.find({ branchId });
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://restro-saas-website.vercel.app";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.tech";
 
     let updatedCount = 0;
     for (const table of tables) {

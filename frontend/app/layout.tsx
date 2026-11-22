@@ -4,7 +4,7 @@ import AuthProvider from "@/providers/AuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import ToastProvider from "@/providers/ToastProvider";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.com";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.tech";
 
 export const viewport: Viewport = {
   width: "device-width",

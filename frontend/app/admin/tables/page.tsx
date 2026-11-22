@@ -842,7 +842,7 @@ export default function TablesPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      const domain = process.env.NEXT_PUBLIC_APP_URL || "https://restro-saas-website.vercel.app";
+                      const domain = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.tech";
                       const fullUrl = `${domain}/${response?.restaurant?.slug || "tasty-bites"}/table/${viewingTable.number}`;
                       navigator.clipboard.writeText(fullUrl);
                       toast.success("Copied QR Menu URL to clipboard!");

@@ -113,7 +113,7 @@ async function sendWelcomeRegistrationEmail(dataOrEmail, legacyName, legacyResta
   }
 
   const isConfigured = isSmtpConfigured();
-  const loginUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://restro-saas-website.vercel.app") + "/login";
+  const loginUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://servedesk.tech") + "/login";
 
   const mailOptions = {
     from: process.env.SMTP_FROM || '"ServeDesk" <noreply@servedesk.com>',
@@ -258,7 +258,7 @@ async function sendStaffInviteEmail(email, name, role, restaurantName, tempPassw
     return;
   }
 
-  const loginUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://restro-saas-website.vercel.app") + "/login";
+  const loginUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://servedesk.tech") + "/login";
 
   const mailOptions = {
     from: process.env.SMTP_FROM || '"ServeDesk" <noreply@servedesk.com>',
