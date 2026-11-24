@@ -81,10 +81,14 @@ const renderEmailFooter = () => `
     <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 11px;">
       Developed &amp; Maintained by <strong>Alvora Tech Solution</strong>.
     </p>
-    <p style="margin: 6px 0 0 0; color: #94a3b8; font-size: 11px;">
-      Need assistance? Contact our team at <a href="mailto:support@alvoratech.com" style="color: #ea580c; text-decoration: none; font-weight: 600;">support@alvoratech.com</a>
-    </p>
-    <p style="margin: 12px 0 0 0; color: #cbd5e1; font-size: 10px;">
+    <div style="margin: 12px 0; padding: 12px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; display: inline-block; text-align: left;">
+      <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Customer Support & Assistance:</div>
+      <div style="font-size: 12px; color: #334155; line-height: 1.6;">
+        📞 Phone: <a href="tel:8385973582" style="color: #ea580c; text-decoration: none; font-weight: 700;">+91 83859 73582</a> / <a href="tel:8562824281" style="color: #ea580c; text-decoration: none; font-weight: 700;">+91 85628 24281</a><br/>
+        ✉️ Email: <a href="mailto:alvora.tech.solution@gmail.com" style="color: #ea580c; text-decoration: none; font-weight: 700;">alvora.tech.solution@gmail.com</a>
+      </div>
+    </div>
+    <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 10px;">
       This is an automated system notification from ServeDesk. Please do not reply directly to this email.
     </p>
   </div>

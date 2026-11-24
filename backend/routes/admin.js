@@ -720,10 +720,13 @@ router.get("/orders", checkFeature("orders"), async (req, res) => {
       : orders;
 
     const restaurant = await Restaurant.findById(req.user.restaurantId);
+    const settings = await Settings.findOne({ branchId: req.user.branchId });
+
     return res.json({
       success: true,
       data: finalOrders,
-      restaurant: restaurant ? { name: restaurant.name, slug: restaurant.slug, address: restaurant.address, phone: restaurant.phone } : null
+      restaurant: restaurant ? { name: restaurant.name, slug: restaurant.slug, address: restaurant.address, phone: restaurant.phone } : null,
+      settings: settings ? { gstNumber: settings.gstNumber, thermalPrinterWidth: settings.thermalPrinterWidth, currency: settings.currency } : null
     });
   } catch (error) {
     return res.status(500).json({ error: "Failed to fetch orders" });
@@ -822,6 +825,177 @@ router.delete("/notifications/clear", async (req, res) => {
     return res.json({ success: true, message: "Cleared all notifications" });
   } catch (error) {
     return res.status(500).json({ error: "Failed to clear notifications" });
+  }
+});
+
+// 12. SALES & REPORTS
+router.get("/reports", async (req, res) => {
+  try {
+    const { restaurantId } = req.user;
+    if (!restaurantId) {
+      return res.status(400).json({ error: "Missing restaurant bound" });
+    }
+
+    const { range = "7d", startDate, endDate, paymentMethod, status } = req.query;
+    const restroObjectId = new mongoose.Types.ObjectId(restaurantId);
+
+    let fromDate = new Date();
+    let toDate = new Date();
+    toDate.setHours(23, 59, 59, 999);
+
+    if (startDate && endDate) {
+      fromDate = new Date(startDate);
+      fromDate.setHours(0, 0, 0, 0);
+      toDate = new Date(endDate);
+      toDate.setHours(23, 59, 59, 999);
+    } else {
+      fromDate.setHours(0, 0, 0, 0);
+      if (range === "today") {
+        // fromDate is today 00:00:00
+      } else if (range === "yesterday") {
+        fromDate.setDate(fromDate.getDate() - 1);
+        toDate = new Date(fromDate);
+        toDate.setHours(23, 59, 59, 999);
+      } else if (range === "7d") {
+        fromDate.setDate(fromDate.getDate() - 6);
+      } else if (range === "30d") {
+        fromDate.setDate(fromDate.getDate() - 29);
+      } else if (range === "this_month") {
+        fromDate.setDate(1);
+      } else if (range === "last_month") {
+        fromDate.setMonth(fromDate.getMonth() - 1);
+        fromDate.setDate(1);
+        toDate = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0, 23, 59, 59, 999);
+      } else if (range === "1y") {
+        fromDate.setFullYear(fromDate.getFullYear() - 1);
+      }
+    }
+
+    const query = {
+      restaurantId: restroObjectId,
+      createdAt: { $gte: fromDate, $lte: toDate },
+    };
+
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    if (paymentMethod && paymentMethod !== "all") {
+      query.paymentMethod = paymentMethod;
+    }
+
+    const orders = await Order.find(query)
+      .populate("tableId", "tableNumber")
+      .populate({
+        path: "items",
+        populate: { path: "menuItemId", select: "name price" }
+      })
+      .sort({ createdAt: -1 });
+
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter((o) => o.status === "Completed" || o.paymentStatus === "Paid").length;
+    const cancelledOrders = orders.filter((o) => o.status === "Cancelled").length;
+
+    const totalRevenue = Math.round(
+      orders
+        .filter((o) => o.status === "Completed" || o.paymentStatus === "Paid")
+        .reduce((sum, o) => sum + (o.total || 0), 0)
+    );
+
+    const totalTax = Math.round(
+      orders
+        .filter((o) => o.status === "Completed" || o.paymentStatus === "Paid")
+        .reduce((sum, o) => sum + ((o.cgst || 0) + (o.sgst || 0) + (o.igst || 0)), 0)
+    );
+
+    const totalDiscount = Math.round(
+      orders
+        .filter((o) => o.status === "Completed" || o.paymentStatus === "Paid")
+        .reduce((sum, o) => sum + (o.discount || 0), 0)
+    );
+
+    const averageOrderValue = completedOrders > 0 ? Math.round(totalRevenue / completedOrders) : 0;
+
+    // Payment methods breakdown
+    const paymentBreakdownMap = {};
+    orders.forEach((o) => {
+      if (o.status === "Completed" || o.paymentStatus === "Paid") {
+        const method = o.paymentMethod || "Cash";
+        if (!paymentBreakdownMap[method]) {
+          paymentBreakdownMap[method] = { method, count: 0, amount: 0 };
+        }
+        paymentBreakdownMap[method].count += 1;
+        paymentBreakdownMap[method].amount += (o.total || 0);
+      }
+    });
+    const paymentBreakdown = Object.values(paymentBreakdownMap);
+
+    // Grouping for chart (Daily or Monthly depending on range duration)
+    const diffDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24));
+    let salesTimeline = [];
+
+    if (diffDays <= 35) {
+      // Group by Day
+      const dailyMap = {};
+      orders.forEach((o) => {
+        if (o.status === "Completed" || o.paymentStatus === "Paid") {
+          const dStr = new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          if (!dailyMap[dStr]) {
+            dailyMap[dStr] = { label: dStr, revenue: 0, orders: 0 };
+          }
+          dailyMap[dStr].revenue += (o.total || 0);
+          dailyMap[dStr].orders += 1;
+        }
+      });
+      salesTimeline = Object.values(dailyMap);
+    } else {
+      // Group by Month
+      const monthlyMap = {};
+      orders.forEach((o) => {
+        if (o.status === "Completed" || o.paymentStatus === "Paid") {
+          const mStr = new Date(o.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+          if (!monthlyMap[mStr]) {
+            monthlyMap[mStr] = { label: mStr, revenue: 0, orders: 0 };
+          }
+          monthlyMap[mStr].revenue += (o.total || 0);
+          monthlyMap[mStr].orders += 1;
+        }
+      });
+      salesTimeline = Object.values(monthlyMap);
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        summary: {
+          totalOrders,
+          completedOrders,
+          cancelledOrders,
+          totalRevenue,
+          totalTax,
+          totalDiscount,
+          averageOrderValue,
+        },
+        paymentBreakdown,
+        salesTimeline,
+        orders: orders.slice(0, 100).map((o) => ({
+          _id: o._id,
+          orderId: o._id.toString().slice(-6).toUpperCase(),
+          tableNumber: o.tableId?.tableNumber || "N/A",
+          customerName: o.customerName || "Guest",
+          customerPhone: o.customerPhone || "-",
+          total: o.total,
+          status: o.status,
+          paymentStatus: o.paymentStatus,
+          paymentMethod: o.paymentMethod || "Cash",
+          createdAt: o.createdAt,
+          itemCount: o.items?.length || 0,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Reports API error:", error);
+    return res.status(500).json({ error: "Failed to fetch sales reports" });
   }
 });
 
