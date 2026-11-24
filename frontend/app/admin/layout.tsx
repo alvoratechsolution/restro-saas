@@ -28,10 +28,11 @@ import {
   Lock,
   Zap,
   ExternalLink,
+  BarChart3,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 
-const SYSTEM_FEATURES = ["menu", "orders", "qr-tables", "staff", "coupons", "settings"];
+const SYSTEM_FEATURES = ["menu", "orders", "qr-tables", "staff", "coupons", "settings", "reports"];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -250,6 +251,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Live Orders", href: "/admin/orders", icon: ShoppingBag, feature: "orders" },
+    { name: "Reports & Sales", href: "/admin/reports", icon: BarChart3 },
     { name: "Categories", href: "/admin/categories", icon: Tags, feature: "menu" },
     { name: "Menu Items", href: "/admin/menu", icon: UtensilsCrossed, feature: "menu" },
     { name: "Tables & QRs", href: "/admin/tables", icon: TableProperties, feature: "qr-tables" },

@@ -64,7 +64,12 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<Order["status"] | "All">("All");
 
   // Query live orders
-  const { data: response, isLoading } = useQuery<{ success: boolean; data: Order[]; restaurant?: { name: string; address?: string; phone?: string } }>({
+  const { data: response, isLoading } = useQuery<{
+    success: boolean;
+    data: Order[];
+    restaurant?: { name: string; address?: string; phone?: string };
+    settings?: { gstNumber?: string; thermalPrinterWidth?: string; currency?: string };
+  }>({
     queryKey: ["admin", "orders", activeTab],
     queryFn: () => {
       const statusParam = activeTab === "All" ? "" : `?status=${activeTab}`;
@@ -159,19 +164,23 @@ export default function OrdersPage() {
     if (!printWindow) return;
 
     const restInfo = response?.restaurant;
+    const settings = response?.settings;
     const restName = restInfo?.name || "Our Restaurant";
     const restAddress = restInfo?.address || "";
     const restPhone = restInfo?.phone || "";
+    const gstNo = settings?.gstNumber || "";
+    const printerWidth = settings?.thermalPrinterWidth || "80mm";
+    const is58mm = printerWidth === "58mm";
 
     let itemsHtml = "";
     order.items.forEach((item) => {
       const addonsText = item.selectedAddons?.length > 0 
-        ? `<div class="item-addons">+ ${item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}</div>` 
+        ? `<div class="item-sub">+ ${item.selectedAddons.map((a: any) => typeof a === "object" ? a.name : a).join(", ")}</div>` 
         : "";
       const variantText = item.selectedVariant 
-        ? `<div class="item-variant">Portion: ${typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}</div>` 
+        ? `<div class="item-sub">Portion: ${typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}</div>` 
         : "";
-      const noteText = item.specialInstructions ? `<div class="item-variant" style="color: #b45309; font-weight: bold;">Note: ${item.specialInstructions}</div>` : "";
+      const noteText = item.specialInstructions ? `<div class="item-sub" style="font-weight: bold;">Note: ${item.specialInstructions}</div>` : "";
       
       itemsHtml += `
         <tr class="item-row">
@@ -196,104 +205,161 @@ export default function OrdersPage() {
       `
       : "";
 
+    const taxRow = (order.cgst > 0 || order.sgst > 0)
+      ? `
+        <div class="summary-row">
+          <span>CGST (2.5%):</span>
+          <span>₹${Math.round(order.cgst || 0)}</span>
+        </div>
+        <div class="summary-row">
+          <span>SGST (2.5%):</span>
+          <span>₹${Math.round(order.sgst || 0)}</span>
+        </div>
+      `
+      : "";
+
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8" />
           <title>Receipt - Order #${order._id.slice(-6).toUpperCase()}</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+            @page {
+              size: ${is58mm ? "58mm auto" : "80mm auto"};
+              margin: 0;
+            }
+            * {
+              box-sizing: border-box;
+            }
             body {
               margin: 0;
-              padding: 20px;
-              font-family: 'Courier Prime', monospace;
+              padding: ${is58mm ? "6px 4px" : "12px 8px"};
+              font-family: 'Merchant Copy', 'Courier New', Courier, monospace;
               color: #000000;
               background-color: #ffffff;
-              font-size: 14px;
-              width: 300px;
-              box-sizing: border-box;
+              font-size: ${is58mm ? "11px" : "13px"};
+              line-height: 1.25;
+              width: ${is58mm ? "48mm" : "72mm"};
+              max-width: 100%;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .receipt-header {
               text-align: center;
-              margin-bottom: 15px;
+              margin-bottom: 6px;
             }
             .restaurant-name {
-              font-size: 18px;
-              font-weight: 700;
+              font-size: ${is58mm ? "14px" : "17px"};
+              font-weight: 900;
               text-transform: uppercase;
-              margin-bottom: 5px;
+              letter-spacing: 0.5px;
+              margin-bottom: 3px;
             }
             .info-line {
-              margin-bottom: 3px;
-              font-size: 11px;
+              margin-bottom: 2px;
+              font-size: ${is58mm ? "10px" : "11px"};
+            }
+            .bill-type {
+              margin-top: 4px;
+              font-weight: bold;
+              text-transform: uppercase;
+              font-size: ${is58mm ? "10px" : "12px"};
             }
             .divider {
-              border-top: 1px dashed #000;
-              margin: 10px 0;
+              border-top: 1px dashed #000000;
+              margin: 6px 0;
             }
             .order-meta {
-              font-size: 12px;
-              line-height: 1.4;
-              margin-bottom: 10px;
+              font-size: ${is58mm ? "10px" : "12px"};
+              line-height: 1.35;
+            }
+            .order-meta div {
+              display: flex;
+              justify-content: space-between;
+            }
+            .order-meta strong {
+              text-transform: uppercase;
             }
             .items-table {
               width: 100%;
               border-collapse: collapse;
-              margin: 10px 0;
-              font-size: 13px;
+              margin: 6px 0;
+              font-size: ${is58mm ? "10px" : "12px"};
+            }
+            .items-table th {
+              border-bottom: 1px dashed #000;
+              padding-bottom: 3px;
+              font-weight: bold;
             }
             .item-row td {
-              padding: 4px 0;
+              padding: 3px 0;
               vertical-align: top;
             }
             .item-name-cell {
               text-align: left;
+              word-break: break-word;
             }
             .item-qty {
               font-weight: bold;
             }
-            .item-variant, .item-addons {
-              font-size: 11px;
-              color: #555;
-              padding-left: 20px;
+            .item-sub {
+              font-size: ${is58mm ? "9px" : "10px"};
+              padding-left: 8px;
+              color: #333;
             }
             .item-price-cell {
               text-align: right;
-              width: 60px;
+              width: 25%;
+              white-space: nowrap;
             }
             .item-total-cell {
               text-align: right;
-              width: 70px;
+              width: 25%;
+              white-space: nowrap;
+              font-weight: bold;
             }
             .summary-section {
-              margin: 10px 0;
-              line-height: 1.5;
+              margin: 6px 0;
+              line-height: 1.4;
+              font-size: ${is58mm ? "10px" : "12px"};
             }
             .summary-row {
               display: flex;
               justify-content: space-between;
+              padding: 1px 0;
             }
             .total-row {
-              font-weight: 700;
-              font-size: 16px;
-              margin-top: 5px;
+              font-weight: 900;
+              font-size: ${is58mm ? "13px" : "16px"};
+              margin-top: 4px;
               border-top: 1px dashed #000;
-              padding-top: 5px;
+              border-bottom: 1px dashed #000;
+              padding: 4px 0;
             }
             .payment-info {
-              font-size: 12px;
-              margin: 10px 0;
-              text-align: center;
+              font-size: ${is58mm ? "10px" : "11px"};
+              margin: 6px 0;
+              text-align: left;
+            }
+            .payment-info div {
+              display: flex;
+              justify-content: space-between;
             }
             .footer-msg {
               text-align: center;
-              font-size: 12px;
-              margin-top: 20px;
-              line-height: 1.4;
+              font-size: ${is58mm ? "9px" : "11px"};
+              margin-top: 10px;
+              line-height: 1.35;
             }
             @media print {
-              body {
-                padding: 10px;
-                width: 100%;
+              html, body {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 4px !important;
+              }
+              .divider {
+                border-top: 1px dashed #000 !important;
               }
             }
           </style>
@@ -301,26 +367,28 @@ export default function OrdersPage() {
         <body>
           <div class="receipt-header">
             <div class="restaurant-name">${restName.toUpperCase()}</div>
-            ${restAddress ? `<div class="info-line" style="font-size: 11px; margin-bottom: 2px;">${restAddress}</div>` : ""}
-            ${restPhone ? `<div class="info-line" style="font-size: 11px; margin-bottom: 2px;">Contact: ${restPhone}</div>` : ""}
-            <div class="info-line" style="margin-top: 5px; font-weight: bold;">Dine-in Order Receipt</div>
+            ${restAddress ? `<div class="info-line">${restAddress}</div>` : ""}
+            ${restPhone ? `<div class="info-line">Phone: ${restPhone}</div>` : ""}
+            ${gstNo ? `<div class="info-line">GSTIN: <strong>${gstNo}</strong></div>` : ""}
+            <div class="bill-type">*** TAX INVOICE / RECEIPT ***</div>
           </div>
           <div class="divider"></div>
           <div class="order-meta">
-            <div><strong>ORDER ID:</strong> #${order._id.slice(-6).toUpperCase()}</div>
-            <div><strong>TABLE:</strong> Table ${order.tableId?.tableNumber || "N/A"}</div>
-            <div><strong>GUEST:</strong> ${order.customerName || "Walk-in Guest"} ${order.customerPhone ? "(" + order.customerPhone + ")" : ""}</div>
-            <div><strong>DATE:</strong> ${new Date(order.createdAt).toLocaleDateString()}</div>
-            <div><strong>TIME:</strong> ${new Date(order.createdAt).toLocaleTimeString()}</div>
-            ${order.specialInstructions ? `<div style="margin-top: 4px; font-weight: bold; color: #b45309; font-size: 11px;">NOTE: ${order.specialInstructions}</div>` : ""}
+            <div><span>INVOICE NO:</span> <strong>#${order._id.slice(-6).toUpperCase()}</strong></div>
+            <div><span>TABLE NO:</span> <strong>TABLE ${order.tableId?.tableNumber || "N/A"}</strong></div>
+            <div><span>GUEST:</span> <span>${order.customerName || "Dine-in Guest"}</span></div>
+            ${order.customerPhone ? `<div><span>CONTACT:</span> <span>${order.customerPhone}</span></div>` : ""}
+            <div><span>DATE:</span> <span>${new Date(order.createdAt).toLocaleDateString()}</span></div>
+            <div><span>TIME:</span> <span>${new Date(order.createdAt).toLocaleTimeString()}</span></div>
+            ${order.specialInstructions ? `<div style="margin-top: 2px;"><span>NOTE:</span> <strong>${order.specialInstructions}</strong></div>` : ""}
           </div>
           <div class="divider"></div>
           <table class="items-table">
             <thead>
-              <tr style="border-bottom: 1px dashed #000;">
-                <th style="text-align: left; padding-bottom: 4px;">Item</th>
-                <th style="text-align: right; width: 60px; padding-bottom: 4px;">Price</th>
-                <th style="text-align: right; width: 70px; padding-bottom: 4px;">Amt</th>
+              <tr>
+                <th style="text-align: left;">Item</th>
+                <th style="text-align: right;">Rate</th>
+                <th style="text-align: right;">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -334,25 +402,26 @@ export default function OrdersPage() {
               <span>₹${Math.round(order.subtotal)}</span>
             </div>
             ${discountRow}
+            ${taxRow}
             <div class="summary-row total-row">
-              <span>TOTAL DUE:</span>
+              <span>NET TOTAL:</span>
               <span>₹${Math.round(order.total)}</span>
             </div>
           </div>
-          <div class="divider"></div>
           <div class="payment-info">
-            <div><strong>Payment Method:</strong> ${order.paymentMethod}</div>
-            <div><strong>Payment Status:</strong> ${order.paymentStatus.toUpperCase()}</div>
+            <div><span>Payment Mode:</span> <strong>${order.paymentMethod || "CASH"}</strong></div>
+            <div><span>Status:</span> <strong>${order.paymentStatus ? order.paymentStatus.toUpperCase() : "PAID"}</strong></div>
           </div>
           <div class="divider"></div>
           <div class="footer-msg">
-            <div>Thank you for dining with us!</div>
-            <div style="font-size: 10px; margin-top: 5px;">Powered by ServeDesk</div>
+            <div>*** THANK YOU FOR DINING WITH US! ***</div>
+            <div style="font-size: 9px; margin-top: 4px;">Software by ServeDesk · alvoratech.com</div>
           </div>
           <script>
             window.onload = function() {
+              window.focus();
               window.print();
-              setTimeout(() => { window.close(); }, 100);
+              setTimeout(() => { window.close(); }, 300);
             }
           </script>
         </body>

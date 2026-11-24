@@ -6,6 +6,7 @@ import apiFetch from "@/lib/api";
 import useCart from "@/store/useCart";
 import useSocket from "@/hooks/useSocket";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 import {
   UtensilsCrossed,
   BellRing,
@@ -25,6 +26,7 @@ import {
   RotateCw,
   AlertCircle,
   ChefHat,
+  Search,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -133,6 +135,9 @@ export default function TableOrderingPage({
 
   // Selected Category
   const [selectedCat, setSelectedCat] = useState<string>("All");
+
+  // Search query
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Filter food type
   const [filterType, setFilterType] = useState<"all" | "veg" | "non-veg">("all");
@@ -728,7 +733,11 @@ export default function TableOrderingPage({
       filterType === "all" ||
       (filterType === "veg" && item.foodType === "veg") ||
       (filterType === "non-veg" && item.foodType === "non-veg");
-    return matchesCat && matchesType;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase().trim()));
+    return matchesCat && matchesType && matchesSearch;
   });
 
   return (
@@ -833,6 +842,26 @@ export default function TableOrderingPage({
             </div>
             <span className="text-xs font-black text-slate-900 mt-0.5">~ 15-20 Mins</span>
           </div>
+        </div>
+
+        {/* Live Search Bar for Items */}
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search tasty dishes, drinks, desserts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200/90 text-slate-900 placeholder:text-slate-400 rounded-2xl text-xs sm:text-sm font-medium outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 shadow-xs transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Dietary Preference Filter */}
