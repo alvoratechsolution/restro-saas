@@ -18,6 +18,7 @@ import {
   Printer,
   User,
   Phone,
+  Trash2,
 } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
@@ -159,6 +160,27 @@ export default function OrdersPage() {
     updateOrderMutation.mutate({ id, paymentStatus });
   };
 
+  // Remove single item from active order
+  const removeItemMutation = useMutation({
+    mutationFn: ({ orderId, itemId }: { orderId: string; itemId: string }) =>
+      apiFetch(`/api/admin/orders/${orderId}/items/${itemId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: (data: any) => {
+      toast.success(data?.message || "Item removed from order!");
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to remove item");
+    },
+  });
+
+  const handleRemoveSingleItem = (orderId: string, itemId: string, itemName: string) => {
+    if (confirm(`Kya aap "${itemName}" ko is order/bill se hatana chahte hain? Total amount automatically recalculate ho jaega.`)) {
+      removeItemMutation.mutate({ orderId, itemId });
+    }
+  };
+
   const handlePrintReceipt = (order: Order) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
@@ -207,14 +229,16 @@ export default function OrdersPage() {
 
     const taxRow = (order.cgst > 0 || order.sgst > 0)
       ? `
+        ${order.cgst > 0 ? `
         <div class="summary-row">
-          <span>CGST (2.5%):</span>
+          <span>CGST:</span>
           <span>₹${Math.round(order.cgst || 0)}</span>
-        </div>
+        </div>` : ""}
+        ${order.sgst > 0 ? `
         <div class="summary-row">
-          <span>SGST (2.5%):</span>
+          <span>SGST:</span>
           <span>₹${Math.round(order.sgst || 0)}</span>
-        </div>
+        </div>` : ""}
       `
       : "";
 
@@ -545,11 +569,13 @@ export default function OrdersPage() {
                 {/* Items */}
                 <div className="p-4 flex-1 space-y-2.5 max-h-60 overflow-y-auto">
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-start gap-3">
-                      <div className="text-xs">
-                        <p className="font-bold text-slate-800">
-                          {item.quantity}x {item.name}
-                        </p>
+                    <div key={idx} className="flex justify-between items-start gap-3 group/item hover:bg-slate-50/80 p-1.5 rounded-xl transition-colors">
+                      <div className="text-xs flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-bold text-slate-800">
+                            {item.quantity}x {item.name}
+                          </p>
+                        </div>
                         {item.selectedVariant && (
                           <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
                             Portion: {typeof item.selectedVariant === "object" ? (item.selectedVariant as any).name : item.selectedVariant}
@@ -566,9 +592,23 @@ export default function OrdersPage() {
                           </p>
                         )}
                       </div>
-                      <span className="text-xs font-black text-slate-700 shrink-0">
-                        ₹{Math.round(item.price * item.quantity)}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-xs font-black text-slate-700">
+                          ₹{Math.round(item.price * item.quantity)}
+                        </span>
+                        {/* Remove single item button (Counter cancellation) */}
+                        {order.status !== "Completed" && order.status !== "Cancelled" && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSingleItem(order._id, item._id, item.name)}
+                            disabled={removeItemMutation.isPending}
+                            title={`Cancel ${item.name}`}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
