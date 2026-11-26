@@ -6,6 +6,7 @@ const SettingsSchema = new Schema(
     restaurantId: { type: Schema.Types.ObjectId, ref: "Restaurant", required: true, index: true },
     branchId: { type: Schema.Types.ObjectId, ref: "Branch", required: true, unique: true, index: true },
     currency: { type: String, required: true, default: "INR" },
+    enableGst: { type: Boolean, default: true },
     gstNumber: { type: String, trim: true },
     cgstRate: { type: Number, required: true, default: 2.5, min: 0 },
     sgstRate: { type: Number, required: true, default: 2.5, min: 0 },

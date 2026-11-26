@@ -72,6 +72,7 @@ router.get("/menu", async (req, res) => {
     let branchId = tableDoc?.branchId || defaultBranch?._id || null;
     let settings = settingsDoc || {
       currency: "INR",
+      enableGst: true,
       cgstRate: 2.5,
       sgstRate: 2.5,
       enableSoundAlerts: true,
@@ -253,12 +254,13 @@ router.post("/orders", async (req, res) => {
       allTableIds.push(table._id);
     }
 
-    const hasGstBilling = restaurant.subscriptionPlan && restaurant.subscriptionPlan.features && restaurant.subscriptionPlan.features.includes("gst-billing");
+    const hasGstPlanFeature = !restaurant.subscriptionPlan?.features || restaurant.subscriptionPlan.features.includes("gst-billing");
 
     const branchId = table.branchId;
     const settings = await Settings.findOne({ branchId });
-    const cgstRate = hasGstBilling ? (settings?.cgstRate || 0) : 0;
-    const sgstRate = hasGstBilling ? (settings?.sgstRate || 0) : 0;
+    const isGstEnabled = hasGstPlanFeature && (settings?.enableGst !== false);
+    const cgstRate = isGstEnabled ? (settings?.cgstRate ?? 2.5) : 0;
+    const sgstRate = isGstEnabled ? (settings?.sgstRate ?? 2.5) : 0;
 
     // CHECK IF WE SHOULD CONSOLIDATE INTO AN EXISTING ACTIVE TABLE ORDER
     let existingOrder = null;
@@ -326,8 +328,8 @@ router.post("/orders", async (req, res) => {
       existingOrder.subtotal = Math.round((existingOrder.subtotal || 0) + addedSubtotal);
 
       const taxableAmount = Math.max(0, existingOrder.subtotal - (existingOrder.discount || 0));
-      existingOrder.cgst = hasGstBilling ? Math.round((taxableAmount * cgstRate) / 100) : 0;
-      existingOrder.sgst = hasGstBilling ? Math.round((taxableAmount * sgstRate) / 100) : 0;
+      existingOrder.cgst = isGstEnabled ? Math.round((taxableAmount * cgstRate) / 100) : 0;
+      existingOrder.sgst = isGstEnabled ? Math.round((taxableAmount * sgstRate) / 100) : 0;
       existingOrder.total = Math.round(taxableAmount + existingOrder.cgst + existingOrder.sgst);
 
       if (customerName && (!existingOrder.customerName || existingOrder.customerName === "Guest")) {
@@ -412,8 +414,8 @@ router.post("/orders", async (req, res) => {
     }
 
     const taxableAmount = Math.max(0, subtotal - discount);
-    const cgst = hasGstBilling ? Math.round((taxableAmount * cgstRate) / 100) : 0;
-    const sgst = hasGstBilling ? Math.round((taxableAmount * sgstRate) / 100) : 0;
+    const cgst = isGstEnabled ? Math.round((taxableAmount * cgstRate) / 100) : 0;
+    const sgst = isGstEnabled ? Math.round((taxableAmount * sgstRate) / 100) : 0;
     const total = Math.round(taxableAmount + cgst + sgst);
 
     const order = new Order({
