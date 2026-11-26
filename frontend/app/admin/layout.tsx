@@ -29,6 +29,8 @@ import {
   Zap,
   ExternalLink,
   BarChart3,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 
@@ -39,6 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { data: restaurantResponse } = useQuery<{
     success: boolean;
@@ -347,25 +350,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="h-screen bg-[#f8fafc] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
       {/* ================= SIDEBAR FOR DESKTOP ================= */}
-      <aside className="hidden md:flex flex-col w-56 border-r border-slate-800/80 bg-[#0b0f19] p-4 shrink-0 shadow-2xl z-20 h-screen overflow-y-auto">
+      <aside
+        className={`hidden md:flex flex-col border-r border-slate-800/80 bg-[#0b0f19] p-4 shrink-0 shadow-2xl z-20 h-screen transition-all duration-300 ${
+          sidebarCollapsed ? "w-18 items-center" : "w-56"
+        }`}
+      >
         {/* Brand identity header */}
-        <div className="flex items-center gap-2.5 mb-6 px-1">
+        <div className={`flex items-center gap-2.5 mb-6 ${sidebarCollapsed ? "justify-center" : "px-1"}`}>
           <div className="h-8 w-8 rounded-lg overflow-hidden shadow-md shadow-orange-500/25 bg-slate-900 border border-orange-500/30 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={restaurantLogo} alt="Logo" className="h-full w-full object-cover" />
           </div>
-          <div className="overflow-hidden">
-            <h1 className="font-bold text-white text-sm tracking-tight truncate max-w-[140px]">
-              {restaurantName}
-            </h1>
-            <p className="text-[8px] text-orange-400 font-bold uppercase tracking-wider truncate">
-              ServeDesk · Alvora Tech
-            </p>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="overflow-hidden">
+              <h1 className="font-bold text-white text-sm tracking-tight truncate max-w-[140px]">
+                {restaurantName}
+              </h1>
+              <p className="text-[8px] text-orange-400 font-bold uppercase tracking-wider truncate">
+                ServeDesk · Alvora Tech
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 space-y-1 overflow-y-auto pr-0.5">
+        <nav className="flex-1 space-y-1 overflow-y-auto pr-0.5 w-full">
           {filteredNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -373,36 +382,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                title={sidebarCollapsed ? item.name : undefined}
+                className={`flex items-center gap-2.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                  sidebarCollapsed ? "justify-center px-0 w-10 mx-auto" : "px-3"
+                } ${
                   isActive
                     ? "bg-gradient-to-r from-orange-500/20 to-orange-500/10 border-l-3 border-orange-500 text-orange-400 font-bold shadow-xs"
                     : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                 }`}
               >
                 <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-orange-400" : "text-slate-500"}`} />
-                <span className="truncate">{item.name}</span>
+                {!sidebarCollapsed && <span className="truncate">{item.name}</span>}
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom User Profile */}
-        <div className="mt-auto pt-4 border-t border-slate-800/80">
-          <div className="flex items-center gap-2.5 mb-3 px-1">
+        <div className={`mt-auto pt-4 border-t border-slate-800/80 w-full ${sidebarCollapsed ? "flex flex-col items-center" : ""}`}>
+          <div className={`flex items-center gap-2.5 mb-3 ${sidebarCollapsed ? "justify-center" : "px-1"}`}>
             <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-xs shrink-0">
               <User className="h-3.5 w-3.5" />
             </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-bold text-white truncate">{session.user?.name}</p>
-              <p className="text-[9px] text-slate-400 truncate">{session.user?.email}</p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-white truncate">{session.user?.name}</p>
+                <p className="text-[9px] text-slate-400 truncate">{session.user?.email}</p>
+              </div>
+            )}
           </div>
           <button
             onClick={() => nextSignOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-150 cursor-pointer"
+            title={sidebarCollapsed ? "Sign Out" : undefined}
+            className={`flex items-center gap-2 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-150 cursor-pointer ${
+              sidebarCollapsed ? "justify-center w-10 px-0 mx-auto" : "w-full px-3"
+            }`}
           >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign Out
+            <LogOut className="h-3.5 w-3.5 shrink-0" />
+            {!sidebarCollapsed && <span>Sign Out</span>}
           </button>
         </div>
       </aside>
@@ -411,13 +428,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
         {/* ================= ADMIN TOP BAR ================= */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-5 py-2.5 shadow-xs shrink-0 flex items-center justify-between gap-4">
-          {/* Left: Mobile Menu Toggle + Restaurant Brand Display */}
+          {/* Left: Mobile Menu Toggle + Desktop Sidebar Collapse Toggle + Restaurant Brand Display */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
+            {/* Desktop Sidebar Toggle Button */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              className="hidden md:flex p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer items-center justify-center"
+            >
+              {sidebarCollapsed ? <PanelLeft className="h-4 w-4 text-orange-600" /> : <PanelLeftClose className="h-4 w-4" />}
             </button>
 
             {/* Restaurant Brand Identity: Logo beside Restaurant Name */}
