@@ -418,13 +418,15 @@ router.post("/orders", async (req, res) => {
     const sgst = isGstEnabled ? Math.round((taxableAmount * sgstRate) / 100) : 0;
     const total = Math.round(taxableAmount + cgst + sgst);
 
+    const isTakeaway = /^takeaway|^counter|^parcel/i.test(cleanTableNumber);
+
     const order = new Order({
       restaurantId,
       branchId,
       tableId: table._id,
       customerName: customerName || "Guest",
       customerPhone: customerPhone || "",
-      type: "dine-in",
+      type: isTakeaway ? "takeaway" : "dine-in",
       status: "Pending",
       subtotal,
       cgst,
@@ -485,14 +487,19 @@ router.post("/orders", async (req, res) => {
     savedOrder.items = orderItemIds;
     await savedOrder.save();
 
-    table.status = "occupied";
-    await table.save();
+    const isTakeaway = /^takeaway|^counter|^parcel/i.test(cleanTableNumber);
+    if (!isTakeaway) {
+      table.status = "occupied";
+      await table.save();
+    }
 
     await Notification.create({
       restaurantId,
       branchId,
-      title: "New Order Placed",
-      message: `Table ${cleanTableNumber} placed a new order for ${items.length} items (Total: ₹${total})`,
+      title: isTakeaway ? "New Counter/Takeaway Order" : "New Order Placed",
+      message: isTakeaway
+        ? `Counter Takeaway placed a new order for ${items.length} items (Total: ₹${total})`
+        : `Table ${cleanTableNumber} placed a new order for ${items.length} items (Total: ₹${total})`,
       type: "new_order",
     });
 
@@ -501,7 +508,8 @@ router.post("/orders", async (req, res) => {
       io.to(branchId.toString()).emit("order-received", {
         orderId: savedOrder._id,
         branchId: branchId.toString(),
-        tableNumber: cleanTableNumber,
+        tableNumber: isTakeaway ? "Counter" : cleanTableNumber,
+        isTakeaway,
         isAddition: false,
       });
     }

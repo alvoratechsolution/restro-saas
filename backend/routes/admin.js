@@ -517,6 +517,55 @@ router.post("/tables/regenerate-qrs", checkFeature("qr-tables"), async (req, res
   }
 });
 
+// Counter / Takeaway QR Code endpoint
+router.get("/counter-qr", async (req, res) => {
+  try {
+    const { restaurantId, branchId } = req.user;
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) return res.status(404).json({ error: "Restaurant not found" });
+
+    // Find or create virtual "Takeaway" table for Counter orders
+    let takeawayTable = await Table.findOne({
+      branchId,
+      tableNumber: { $regex: /^takeaway|^counter/i },
+    });
+
+    if (!takeawayTable) {
+      takeawayTable = await Table.create({
+        restaurantId,
+        branchId,
+        tableNumber: "Counter",
+        seatingCapacity: 1,
+        status: "available",
+        isActive: true,
+      });
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://servedesk.tech";
+    const takeawayUrl = `${appUrl}/${restaurant.slug}/table/Counter`;
+
+    const qrDataUrl = await QRCodeGenerator.toDataURL(takeawayUrl, {
+      width: 600,
+      margin: 2,
+      color: { dark: "#0f172a", light: "#ffffff" },
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        restaurantName: restaurant.name,
+        restaurantSlug: restaurant.slug,
+        tableNumber: "Counter",
+        orderUrl: takeawayUrl,
+        qrCodeUrl: qrDataUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Counter QR error:", error);
+    return res.status(500).json({ error: "Failed to generate Counter QR" });
+  }
+});
+
 router.delete("/tables", checkFeature("qr-tables"), async (req, res) => {
   try {
     const { id } = req.query;
