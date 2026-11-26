@@ -111,6 +111,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!socket) return;
 
     socket.on("waiter-called", (data: any) => {
+      const label = data?.unitLabel || "Table";
+      const tableNum = data?.tableNumber || "";
+      const reason = data?.reason || "Staff Assistance";
+      const callTime = data?.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      // 1. Play Audio Chime Tone
       try {
         const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
         const osc = audioCtx.createOscillator();
@@ -120,54 +126,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         gainNode.connect(audioCtx.destination);
 
         osc.type = "sine";
-        osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1318.51, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+        osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.18); // slide up
 
-        gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.4);
 
         osc.start(audioCtx.currentTime);
-        osc.stop(audioCtx.currentTime + 1.2);
+        osc.stop(audioCtx.currentTime + 1.4);
       } catch (e) {
-        console.warn("Autoplay audio blocked:", e);
+        console.warn("Audio chime error:", e);
       }
 
-      const label = data?.unitLabel || "Table / Room";
-      const reason = data?.reason || "Staff Assistance";
-      const guest = data?.customerName ? ` (${data.customerName})` : "";
-      const callTime = data?.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      // 2. Play Human Voice Announcement ("Table X is calling" / "Attention, Table X is calling for waiter")
+      try {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          window.speechSynthesis.cancel(); // Stop any pending speech
+          const voiceText = `${label} number ${tableNum} calling. ${reason}`;
+          const utterance = new SpeechSynthesisUtterance(voiceText);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.05;
+          utterance.volume = 1.0;
+          utterance.lang = "en-IN"; // Prefer Indian English accent if available
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (voiceErr) {
+        console.warn("Voice announcement error:", voiceErr);
+      }
 
-      toast(`🛎️ ${label} ${data.tableNumber}${guest}: ${reason}`, {
-        icon: "🛎️",
-        duration: 8000,
-        style: {
-          background: "#0f172a",
-          color: "#fff",
-          border: "1px solid #ea580c",
-          borderRadius: "16px",
-          padding: "12px 18px",
-          fontWeight: 700,
-        },
-      });
-
-      // Admin Interactive Visual Popup
-      Swal.fire({
-        title: `🛎️ ${label} ${data.tableNumber} Calling!`,
-        html: `
-          <div style="text-align: left; font-size: 14px; color: #334155; line-height: 1.6; padding: 4px;">
-            <p style="margin-bottom: 6px;"><strong>Service Requested:</strong> <span style="color: #ea580c; font-weight: 800;">${reason}</span></p>
-            <p style="margin-bottom: 6px;"><strong>Guest Name:</strong> <strong>${data.customerName || "Guest"}</strong></p>
-            <p style="margin-bottom: 0;"><strong>Time:</strong> <span style="color: #64748b;">${callTime}</span></p>
-          </div>
-        `,
-        icon: "info",
-        confirmButtonText: "Attending / Done",
-        confirmButtonColor: "#ea580c",
-        showCancelButton: true,
-        cancelButtonText: "Dismiss",
-        timer: 20000,
-      });
-
+      // Update active calls in dropdown list without intrusive modal/toast popups
       setActiveCalls((prev) => [
         {
           id: Math.random().toString(),
@@ -183,8 +170,66 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       refetchNotifs();
     });
 
+    // Handle new order placed announcement across entire admin panel
+    socket.on("order-received", (data: any) => {
+      const tableNum = data?.tableNumber || "";
+      const isAddition = data?.isAddition;
+
+      // 1. Play Upbeat Double Chime
+      try {
+        const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        
+        // Note 1
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.type = "sine";
+        osc1.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        gain1.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc1.start(audioCtx.currentTime);
+        osc1.stop(audioCtx.currentTime + 0.35);
+
+        // Note 2
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.type = "sine";
+        osc2.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain2.gain.setValueAtTime(0.45, audioCtx.currentTime + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.0);
+        osc2.start(audioCtx.currentTime + 0.15);
+        osc2.stop(audioCtx.currentTime + 1.0);
+      } catch (e) {
+        console.warn("Order sound error:", e);
+      }
+
+      // 2. Play Clear Voice Alert ("Attention: Table X se new order aaya hai, check karo")
+      try {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const voiceMsg = isAddition
+            ? `Table number ${tableNum} se naya dish add hua hai, please check karo.`
+            : `Table number ${tableNum} se naya order aaya hai, please check karo.`;
+          const utterance = new SpeechSynthesisUtterance(voiceMsg);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.05;
+          utterance.volume = 1.0;
+          utterance.lang = "hi-IN"; // Hindi/Indian accent
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (voiceErr) {
+        console.warn("Order voice alert error:", voiceErr);
+      }
+
+      refetchNotifs();
+    });
+
     return () => {
       socket.off("waiter-called");
+      socket.off("order-received");
     };
   }, [socket, refetchNotifs]);
 
