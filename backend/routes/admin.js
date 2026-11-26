@@ -188,6 +188,33 @@ router.patch("/categories", checkFeature("menu"), async (req, res) => {
   }
 });
 
+// Bulk toggle all items in a category (e.g. Starters ko poora Out of Stock ya In Stock karna)
+router.patch("/categories/:id/toggle-stock", checkFeature("menu"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isOutOfStock } = req.body; // true = mark whole category out of stock, false = in stock
+
+    const category = await Category.findOne({ _id: id, restaurantId: req.user.restaurantId });
+    if (!category) return res.status(404).json({ error: "Category not found" });
+
+    const result = await MenuItem.updateMany(
+      { categoryId: id, restaurantId: req.user.restaurantId },
+      { $set: { isOutOfStock: Boolean(isOutOfStock) } }
+    );
+
+    return res.json({
+      success: true,
+      message: isOutOfStock
+        ? `All items in "${category.name}" marked as Out of Stock (Unavailable)`
+        : `All items in "${category.name}" marked as In Stock (Available)`,
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Category bulk stock toggle error:", error);
+    return res.status(500).json({ error: "Failed to update stock for category items" });
+  }
+});
+
 router.delete("/categories", checkFeature("menu"), async (req, res) => {
   try {
     const { id } = req.query;
