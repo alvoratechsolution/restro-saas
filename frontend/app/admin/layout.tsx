@@ -32,10 +32,11 @@ import {
   PanelLeftClose,
   PanelLeft,
   Receipt,
+  QrCode,
 } from "lucide-react";
 import Button from "@/components/ui/button";
 
-const SYSTEM_FEATURES = ["menu", "orders", "qr-tables", "staff", "coupons", "settings", "reports", "gst-billing"];
+const SYSTEM_FEATURES = ["menu", "orders", "qr-tables", "staff", "coupons", "settings", "reports", "gst-billing", "counter-qr"];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -210,11 +211,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         console.warn("Order sound error:", e);
       }
 
-      // 2. Play Clear Voice Alert ("Attention: Table X se new order aaya hai, check karo")
+      // 2. Play Clear Voice Alert ("Attention: Table X / Counter se new order aaya hai, check karo")
       try {
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
           window.speechSynthesis.cancel();
-          const voiceMsg = isAddition
+          const isTakeaway = data?.isTakeaway || /^counter|^takeaway/i.test(tableNum);
+          const voiceMsg = isTakeaway
+            ? "Counter se naya Takeaway order aaya hai, please check karo."
+            : isAddition
             ? `Table number ${tableNum} se naya dish add hua hai, please check karo.`
             : `Table number ${tableNum} se naya order aaya hai, please check karo.`;
           const utterance = new SpeechSynthesisUtterance(voiceMsg);
@@ -305,6 +309,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Categories", href: "/admin/categories", icon: Tags, feature: "menu" },
     { name: "Menu Items", href: "/admin/menu", icon: UtensilsCrossed, feature: "menu" },
     { name: "Tables & QRs", href: "/admin/tables", icon: TableProperties, feature: "qr-tables" },
+    { name: "Counter QR (Takeaway)", href: "/admin/counter-qr", icon: QrCode },
     { name: "Staff Members", href: "/admin/staff", icon: Users, feature: "staff" },
     { name: "Coupons", href: "/admin/coupons", icon: Ticket, feature: "coupons" },
     { name: "Settings", href: "/admin/settings", icon: SettingsIcon, feature: "settings" },

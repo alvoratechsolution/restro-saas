@@ -724,14 +724,15 @@ export default function MenuPage() {
 
                     <button
                       onClick={() => handleToggleStock(item)}
-                      title={item.isOutOfStock ? "Mark as In Stock" : "Mark as Out of Stock"}
-                      className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                      title={item.isOutOfStock ? "Click to make Available (In Stock)" : "Click to make Unavailable (Out of Stock)"}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-xs flex items-center gap-1.5 ${
                         item.isOutOfStock
-                          ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                          : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                          ? "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
                       }`}
                     >
-                      {item.isOutOfStock ? "❌ Out of Stock" : "✅ In Stock"}
+                      <span className={`h-2 w-2 rounded-full ${item.isOutOfStock ? "bg-rose-500" : "bg-emerald-500 animate-pulse"}`} />
+                      <span>{item.isOutOfStock ? "Unavailable (Out of Stock)" : "Available (In Stock)"}</span>
                     </button>
                   </div>
                 </div>

@@ -44,6 +44,7 @@ interface Order {
   tableId?: Table;
   customerName?: string;
   customerPhone?: string;
+  type?: "dine-in" | "takeaway" | "delivery";
   items: OrderItem[];
   subtotal: number;
   cgst: number;
@@ -63,6 +64,26 @@ export default function OrdersPage() {
   const branchId = (session?.user as any)?.branchId;
 
   const [activeTab, setActiveTab] = useState<Order["status"] | "All">("All");
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Real-time ticking timer for live order elapsed time
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getElapsedTime = (createdAt: string) => {
+    const diff = Math.max(0, Math.floor((currentTime - new Date(createdAt).getTime()) / 1000));
+    const mins = Math.floor(diff / 60);
+    const secs = diff % 60;
+    if (mins >= 60) {
+      const hours = Math.floor(mins / 60);
+      return `${hours}h ${mins % 60}m ago`;
+    }
+    return `${mins}m ${secs < 10 ? "0" : ""}${secs}s`;
+  };
 
   // Query live orders
   const { data: response, isLoading } = useQuery<{
@@ -519,8 +540,15 @@ export default function OrdersPage() {
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-black text-slate-900">
-                        Table {order.tableId?.tableNumber || "T-N/A"}
+                        {order.type === "takeaway" || /^takeaway|^counter|^parcel/i.test(order.tableId?.tableNumber || "")
+                          ? "🛍️ Takeaway / Counter"
+                          : `Table ${order.tableId?.tableNumber || "T-N/A"}`}
                       </h3>
+                      {order.type === "takeaway" && (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 border border-purple-200">
+                          Parcel
+                        </span>
+                      )}
                       <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1 bg-white border border-slate-200 px-2 py-0.5 rounded-lg shadow-2xs">
                         <User className="h-3 w-3 text-orange-500 shrink-0" />
                         <span className="truncate max-w-[110px]">{order.customerName || "Guest"}</span>
@@ -529,7 +557,13 @@ export default function OrdersPage() {
                     <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
                       <span>ID: #{order._id.slice(-6).toUpperCase()}</span>
                       <span>•</span>
-                      <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+                      <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>•</span>
+                      {/* Live Ticking Time Counter */}
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 font-mono font-bold border border-amber-200/80">
+                        <Clock className="h-2.5 w-2.5 text-amber-600 animate-spin" />
+                        <span>{getElapsedTime(order.createdAt)}</span>
+                      </span>
                       {order.customerPhone && (
                         <>
                           <span>•</span>

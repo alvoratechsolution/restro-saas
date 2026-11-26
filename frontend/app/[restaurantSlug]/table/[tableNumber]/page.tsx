@@ -1009,8 +1009,8 @@ export default function TableOrderingPage({
                     </span>
 
                     {item.isOutOfStock ? (
-                      <span className="text-[10px] text-red-500 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                        Sold Out
+                      <span className="text-[11px] text-rose-600 font-extrabold bg-rose-50 px-2.5 py-1 rounded-xl border border-rose-200 shadow-2xs">
+                        Unavailable
                       </span>
                     ) : (
                       <Button
