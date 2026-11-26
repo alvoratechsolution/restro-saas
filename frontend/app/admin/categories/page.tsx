@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiFetch from "@/lib/api";
-import { Plus, Edit2, Trash2, Loader2, Tags, ToggleLeft, ToggleRight, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, Tags, ToggleLeft, ToggleRight, X, AlertOctagon, CheckCircle2 } from "lucide-react";
 import Card from "@/components/ui/card";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
@@ -83,6 +83,33 @@ export default function CategoriesPage() {
     },
   });
 
+  // Bulk Stock Toggle for entire category
+  const toggleCategoryStockMutation = useMutation({
+    mutationFn: ({ id, isOutOfStock }: { id: string; isOutOfStock: boolean }) =>
+      apiFetch(`/api/admin/categories/${id}/toggle-stock`, {
+        method: "PATCH",
+        body: JSON.stringify({ isOutOfStock }),
+      }),
+    onSuccess: (data: any) => {
+      toast.success(data?.message || "Category stock updated!");
+      queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "menu"] });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to update category stock");
+    },
+  });
+
+  const handleBulkStockToggle = (cat: Category, isOutOfStock: boolean) => {
+    const actionText = isOutOfStock
+      ? `"${cat.name}" ke SARE items ko OUT OF STOCK (Unavailable) karna chahte hain?`
+      : `"${cat.name}" ke SARE items ko IN STOCK (Available) karna chahte hain?`;
+
+    if (confirm(`Kya aap ${actionText}`)) {
+      toggleCategoryStockMutation.mutate({ id: cat._id, isOutOfStock });
+    }
+  };
+
   const resetForm = () => {
     setName("");
     setDescription("");
@@ -156,6 +183,7 @@ export default function CategoriesPage() {
                   <th className="py-3.5 px-6">Description</th>
                   <th className="py-3.5 px-6">Sort Order</th>
                   <th className="py-3.5 px-6">Status</th>
+                  <th className="py-3.5 px-6">Quick Stock Action</th>
                   <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -195,6 +223,30 @@ export default function CategoriesPage() {
                             </>
                           )}
                         </span>
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleBulkStockToggle(cat, true)}
+                            disabled={toggleCategoryStockMutation.isPending}
+                            title={`Mark all dishes in ${cat.name} as Out of Stock`}
+                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors cursor-pointer flex items-center gap-1"
+                          >
+                            <AlertOctagon className="h-3 w-3" />
+                            <span>All Out</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleBulkStockToggle(cat, false)}
+                            disabled={toggleCategoryStockMutation.isPending}
+                            title={`Mark all dishes in ${cat.name} as In Stock (Available)`}
+                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors cursor-pointer flex items-center gap-1"
+                          >
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>All In</span>
+                          </button>
+                        </div>
                       </td>
                       <td className="py-3.5 px-6 text-right space-x-2">
                         <button

@@ -579,35 +579,90 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* Category Horizontal Quick-Scroll Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-1 border-t border-slate-100 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <button
-            onClick={() => setSelectedCategoryFilter("all")}
-            className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-              selectedCategoryFilter === "all"
-                ? "bg-orange-600 text-white shadow-xs"
-                : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-            }`}
-          >
-            All Categories ({menuItems.length})
-          </button>
-          {categories.map((c) => {
-            const count = menuItems.filter((i) => i.categoryId?._id === c._id).length;
-            const isSelected = selectedCategoryFilter === c._id;
-            return (
+        {/* Category Horizontal Quick-Scroll Chips & Category Bulk Out-of-Stock Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-slate-100 pt-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden flex-1">
+            <button
+              onClick={() => setSelectedCategoryFilter("all")}
+              className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                selectedCategoryFilter === "all"
+                  ? "bg-orange-600 text-white shadow-xs"
+                  : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+              }`}
+            >
+              All Categories ({menuItems.length})
+            </button>
+            {categories.map((c) => {
+              const count = menuItems.filter((i) => i.categoryId?._id === c._id).length;
+              const isSelected = selectedCategoryFilter === c._id;
+              return (
+                <button
+                  key={c._id}
+                  onClick={() => setSelectedCategoryFilter(c._id)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-orange-600 text-white shadow-xs"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {c.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Category-Level Out of Stock Button */}
+          {selectedCategoryFilter !== "all" && (
+            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto bg-slate-50 border border-slate-200 p-1 rounded-xl">
+              <span className="text-[10px] font-bold text-slate-500 pl-1">
+                {categories.find((c) => c._id === selectedCategoryFilter)?.name}:
+              </span>
               <button
-                key={c._id}
-                onClick={() => setSelectedCategoryFilter(c._id)}
-                className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
-                  isSelected
-                    ? "bg-orange-600 text-white shadow-xs"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-                }`}
+                type="button"
+                onClick={async () => {
+                  const cat = categories.find((c) => c._id === selectedCategoryFilter);
+                  if (!cat) return;
+                  if (confirm(`Kya aap "${cat.name}" ke saare dishes ko OUT OF STOCK (Unavailable) karna chahte hain?`)) {
+                    try {
+                      await apiFetch(`/api/admin/categories/${cat._id}/toggle-stock`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ isOutOfStock: true }),
+                      });
+                      toast.success(`"${cat.name}" ke saare dishes out of stock ho gaye`);
+                      queryClient.invalidateQueries({ queryKey: ["admin", "menu"] });
+                    } catch (e: any) {
+                      toast.error(e.message || "Failed to update category stock");
+                    }
+                  }
+                }}
+                className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
               >
-                {c.name} ({count})
+                All Out of Stock
               </button>
-            );
-          })}
+              <button
+                type="button"
+                onClick={async () => {
+                  const cat = categories.find((c) => c._id === selectedCategoryFilter);
+                  if (!cat) return;
+                  if (confirm(`Kya aap "${cat.name}" ke saare dishes ko IN STOCK (Available) karna chahte hain?`)) {
+                    try {
+                      await apiFetch(`/api/admin/categories/${cat._id}/toggle-stock`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ isOutOfStock: false }),
+                      });
+                      toast.success(`"${cat.name}" ke saare dishes in stock ho gaye`);
+                      queryClient.invalidateQueries({ queryKey: ["admin", "menu"] });
+                    } catch (e: any) {
+                      toast.error(e.message || "Failed to update category stock");
+                    }
+                  }
+                }}
+                className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+              >
+                All In Stock
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
