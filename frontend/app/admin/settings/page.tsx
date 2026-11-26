@@ -12,6 +12,8 @@ import toast from "react-hot-toast";
 
 interface SettingsData {
   currency: string;
+  enableGst: boolean;
+  gstNumber?: string;
   cgstRate: number;
   sgstRate: number;
   serviceChargeRate: number;
@@ -26,6 +28,8 @@ export default function SettingsPage() {
 
   // Form states
   const [currency, setCurrency] = useState("INR");
+  const [enableGst, setEnableGst] = useState(true);
+  const [gstNumber, setGstNumber] = useState("");
   const [cgstRate, setCgstRate] = useState(2.5);
   const [sgstRate, setSgstRate] = useState(2.5);
   const [serviceChargeRate, setServiceChargeRate] = useState(0);
@@ -45,6 +49,8 @@ export default function SettingsPage() {
     if (response?.data) {
       const s = response.data;
       setCurrency(s.currency || "INR");
+      setEnableGst(s.enableGst ?? true);
+      setGstNumber(s.gstNumber || "");
       setCgstRate(s.cgstRate ?? 2.5);
       setSgstRate(s.sgstRate ?? 2.5);
       setServiceChargeRate(s.serviceChargeRate ?? 0);
@@ -75,8 +81,10 @@ export default function SettingsPage() {
     e.preventDefault();
     updateMutation.mutate({
       currency,
-      cgstRate,
-      sgstRate,
+      enableGst,
+      gstNumber,
+      cgstRate: enableGst ? cgstRate : 0,
+      sgstRate: enableGst ? sgstRate : 0,
       serviceChargeRate,
       deliveryChargeRate,
       enableSoundAlerts,
@@ -122,31 +130,82 @@ export default function SettingsPage() {
 
           {/* Card 2: Taxes & Service Charges */}
           <Card className="p-6 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-4">
-            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <Sparkles className="h-4.5 w-4.5 text-orange-500" />
-              Taxes & Charges
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="CGST Rate (%) *"
-                type="number"
-                step="0.01"
-                value={cgstRate}
-                onChange={(e) => setCgstRate(Number(e.target.value))}
-                required
-              />
-              <Input
-                label="SGST Rate (%) *"
-                type="number"
-                step="0.01"
-                value={sgstRate}
-                onChange={(e) => setSgstRate(Number(e.target.value))}
-                required
-              />
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Sparkles className="h-4.5 w-4.5 text-orange-500" />
+                  GST Billing & Charges
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Apne cafe/restaurant ke hisab se GST enable/disable karein ya rates customize karein.
+                </p>
+              </div>
+
+              {/* GST Toggle Switch */}
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <span className="text-xs font-bold text-slate-700">
+                  {enableGst ? "GST Enabled" : "GST Disabled"}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={enableGst}
+                  onChange={(e) => setEnableGst(e.target.checked)}
+                  className="rounded border-slate-300 text-orange-500 focus:ring-orange-500/20 h-4.5 w-4.5 cursor-pointer"
+                />
+              </label>
+            </div>
+
+            {enableGst ? (
+              <div className="space-y-4 pt-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Input
+                    label="GSTIN / Tax Number (Optional)"
+                    type="text"
+                    placeholder="e.g. 07AAAAA0000A1Z5"
+                    value={gstNumber}
+                    onChange={(e) => setGstNumber(e.target.value)}
+                  />
+                  <Input
+                    label="CGST Rate (%) *"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 2.5"
+                    value={cgstRate}
+                    onChange={(e) => setCgstRate(Number(e.target.value))}
+                    required={enableGst}
+                  />
+                  <Input
+                    label="SGST Rate (%) *"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 2.5"
+                    value={sgstRate}
+                    onChange={(e) => setSgstRate(Number(e.target.value))}
+                    required={enableGst}
+                  />
+                </div>
+                <div className="bg-orange-50/70 border border-orange-200/80 rounded-xl p-3 text-xs text-orange-800 flex items-center justify-between">
+                  <span>Effective Total GST on Orders: <strong>{(Number(cgstRate || 0) + Number(sgstRate || 0)).toFixed(2)}%</strong></span>
+                  <span className="text-[11px] text-orange-600 font-semibold">Bills par automatically calculate hoga</span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 text-xs text-slate-600">
+                <p className="font-bold text-slate-800">GST Billing is currently Disabled</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Customer ke bill aur receipts me koi extra GST/tax add nahi hoga (Flat bill rahega).
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
               <Input
                 label="Service Charge (%)"
                 type="number"
                 step="0.01"
+                min="0"
                 value={serviceChargeRate}
                 onChange={(e) => setServiceChargeRate(Number(e.target.value))}
               />
@@ -154,6 +213,7 @@ export default function SettingsPage() {
                 label="Delivery Charge (₹)"
                 type="number"
                 step="0.1"
+                min="0"
                 value={deliveryChargeRate}
                 onChange={(e) => setDeliveryChargeRate(Number(e.target.value))}
               />

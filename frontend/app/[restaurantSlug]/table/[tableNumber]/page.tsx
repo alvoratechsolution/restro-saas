@@ -85,6 +85,7 @@ interface Theme {
 
 interface SettingsData {
   currency: string;
+  enableGst?: boolean;
   cgstRate: number;
   sgstRate: number;
   serviceChargeRate: number;
@@ -708,9 +709,10 @@ export default function TableOrderingPage({
   }
   const taxableAmount = Math.max(0, subtotal - discount);
 
-  const hasGstBilling = restaurant?.subscriptionPlan?.features?.includes("gst-billing");
-  const cgstRate = hasGstBilling ? (menuResponse?.settings?.cgstRate ?? 2.5) : 0;
-  const sgstRate = hasGstBilling ? (menuResponse?.settings?.sgstRate ?? 2.5) : 0;
+  const hasGstPlanFeature = !restaurant?.subscriptionPlan?.features || restaurant.subscriptionPlan.features.includes("gst-billing");
+  const isGstEnabled = hasGstPlanFeature && (menuResponse?.settings?.enableGst !== false);
+  const cgstRate = isGstEnabled ? (menuResponse?.settings?.cgstRate ?? 2.5) : 0;
+  const sgstRate = isGstEnabled ? (menuResponse?.settings?.sgstRate ?? 2.5) : 0;
 
   const cgst = (taxableAmount * cgstRate) / 100;
   const sgst = (taxableAmount * sgstRate) / 100;
