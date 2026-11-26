@@ -487,7 +487,6 @@ router.post("/orders", async (req, res) => {
     savedOrder.items = orderItemIds;
     await savedOrder.save();
 
-    const isTakeaway = /^takeaway|^counter|^parcel/i.test(cleanTableNumber);
     if (!isTakeaway) {
       table.status = "occupied";
       await table.save();

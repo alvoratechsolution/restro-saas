@@ -19,13 +19,17 @@ const dbConnect = async () => {
 
   try {
     await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     });
     console.log("Connected to MongoDB Atlas successfully");
     await ensureInitialData();
   } catch (error) {
     console.error("Database connection failure:", error);
-    process.exit(1);
+    // Don't kill process immediately on transient network hiccups, retry
+    setTimeout(dbConnect, 5000);
   }
 };
 
