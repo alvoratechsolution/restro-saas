@@ -760,9 +760,113 @@ router.patch("/orders", checkFeature("orders"), async (req, res) => {
     const updated = await Order.findByIdAndUpdate(id, updateFields, { new: true })
       .populate({ path: "items", populate: { path: "menuItemId" } });
 
+    // Emit live status change to socket if table/customer is live
+    const io = req.app.get("io");
+    if (io && order) {
+      io.to(order.branchId.toString()).emit("order-status-updated", {
+        orderId: order._id,
+        status: updated.status,
+      });
+      io.to(order._id.toString()).emit("status-changed", {
+        orderId: order._id,
+        status: updated.status,
+      });
+    }
+
     return res.json({ success: true, data: updated });
   } catch (error) {
     return res.status(500).json({ error: "Failed to update order" });
+  }
+});
+
+// Remove single item from active order (e.g. customer cancels a dish at counter)
+router.delete("/orders/:orderId/items/:itemId", checkFeature("orders"), async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const order = await Order.findOne({ _id: orderId, branchId: req.user.branchId }).populate("items");
+    if (!order) return res.status(404).json({ error: "Order not found" });
+
+    if (order.status === "Completed" || order.status === "Cancelled") {
+      return res.status(400).json({ error: "Cannot modify completed or cancelled order" });
+    }
+
+    // Find the order item
+    const orderItem = await OrderItem.findOne({ _id: itemId, orderId });
+    if (!orderItem) return res.status(404).json({ error: "Order item not found" });
+
+    // Remove item from DB
+    await OrderItem.findByIdAndDelete(itemId);
+
+    // Pull item reference from Order
+    order.items = order.items.filter((item) => {
+      const currentId = item._id ? item._id.toString() : item.toString();
+      return currentId !== itemId.toString();
+    });
+
+    // If order has no items left, mark order as Cancelled
+    if (order.items.length === 0) {
+      order.status = "Cancelled";
+      order.subtotal = 0;
+      order.cgst = 0;
+      order.sgst = 0;
+      order.total = 0;
+      if (order.tableId) {
+        await Table.findByIdAndUpdate(order.tableId, { status: "available" });
+      }
+      await order.save();
+
+      const io = req.app.get("io");
+      if (io) {
+        io.to(order.branchId.toString()).emit("order-status-updated", { orderId: order._id, status: "Cancelled" });
+        io.to(order._id.toString()).emit("status-changed", { orderId: order._id, status: "Cancelled" });
+      }
+
+      return res.json({ success: true, message: "Last item removed. Order cancelled.", data: order });
+    }
+
+    // Recalculate financial totals
+    const remainingItems = await OrderItem.find({ orderId });
+    const newSubtotal = remainingItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+
+    // Fetch branch GST settings
+    const settings = await Settings.findOne({ branchId: req.user.branchId });
+    const isGstEnabled = settings?.enableGst !== false;
+    const cgstRate = isGstEnabled ? (settings?.cgstRate ?? 2.5) : 0;
+    const sgstRate = isGstEnabled ? (settings?.sgstRate ?? 2.5) : 0;
+
+    const discount = order.discount || 0;
+    const taxableAmount = Math.max(0, newSubtotal - discount);
+    const newCgst = isGstEnabled ? Math.round((taxableAmount * cgstRate) / 100) : 0;
+    const newSgst = isGstEnabled ? Math.round((taxableAmount * sgstRate) / 100) : 0;
+    const newTotal = Math.round(taxableAmount + newCgst + newSgst);
+
+    order.subtotal = newSubtotal;
+    order.cgst = newCgst;
+    order.sgst = newSgst;
+    order.total = newTotal;
+    await order.save();
+
+    const populatedOrder = await Order.findById(orderId).populate({ path: "items", populate: { path: "menuItemId" } });
+
+    // Live socket sync
+    const io = req.app.get("io");
+    if (io) {
+      io.to(order.branchId.toString()).emit("order-status-updated", {
+        orderId: order._id,
+        status: order.status,
+        updatedOrder: populatedOrder,
+      });
+      io.to(order._id.toString()).emit("order-updated", {
+        orderId: order._id,
+        items: populatedOrder.items,
+        total: populatedOrder.total,
+      });
+    }
+
+    return res.json({ success: true, message: "Item removed and bill updated", data: populatedOrder });
+  } catch (error) {
+    console.error("Remove order item error:", error);
+    return res.status(500).json({ error: "Failed to remove item from order" });
   }
 });
 
